@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Loader } from '../components/Loader';
+import { Loader } from '../Loader';
 import axios from 'axios';
 
 export function Users() {
@@ -20,13 +20,10 @@ export function Users() {
                 throw new Error('Failed to fetch users');
             }
             
-
-
             return response.data;
         },
     });
 
-    console.log(`isLoading,isError,error,isRefetching`, isLoading, isError, error, isRefetching);
     return (
         <div className="p-4 border">
             <div className="flex items-center justify-center mb-8">

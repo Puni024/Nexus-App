@@ -1,6 +1,6 @@
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-center px-4 bg-white">
+    <div className="min-w-full min-h-screen flex flex-col items-center justify-center text-center px-4 bg-white">
 
       {/* BIG 404 */}
       <h1 className="text-[140px] font-extrabold leading-none text-[#00f2c3] relative">

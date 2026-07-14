@@ -1,5 +1,5 @@
 // components/MainBar.tsx
-import { Users } from "../applications/Users";
+import { Users } from "./applications/Users";
 import  NexusLogo  from "./NexusLogo";
 
 export function MainBar() {

@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import NexusLogo from "../components/NexusLogo";
-import { useGoogleLogin, GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
 
 import { loginSchema, type LoginFormData } from "../schemas/loginSchema";
 
 function Login() {
     const navigate = useNavigate();
     const [showSuccess, setShowSuccess] = useState(false);
+    const [loginError, setLoginError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     const {
         register,
@@ -21,19 +23,27 @@ function Login() {
 
     const onSubmit = async (data: LoginFormData) => {
         try {
+            setLoginError(null);
+
             const res = await fetch("http://localhost:5000/api/auth/login", {
                 method: "POST",
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(data),
             });
 
+            const responseData = await res.json();
+
+            if (res.status === 401) {
+                setLoginError("Invalid credential");
+                return;
+            }
+
             if (!res.ok) {
                 throw new Error("Login failed");
             }
-
-            const responseData = await res.json();
 
             console.log("Login successful", responseData);
 
@@ -49,7 +59,7 @@ function Login() {
 
     const googleLogin = async (googlecredential: string) => {
 
-        const res = await fetch("http://localhost:5000/api/users/google/login", {
+        const res = await fetch("http://localhost:5000/api/auth/google", {
             method: "POST",
             credentials: "include",
             headers: {
@@ -61,7 +71,7 @@ function Login() {
         });
         if (res.ok) {
             setShowSuccess(true);
-            // navigate("/home");
+            navigate("/home");
         }
 
     };
@@ -74,7 +84,7 @@ function Login() {
 
         <div className="h-screen w-full bg-[#EDE6D6] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
 
-            <div className="relative w-full max-w-[392px] bg-[#F5EFE4] border border-[#D8CDB8] rounded-[20px] sm:rounded-[28px] shadow-2xl px-4 py-4 sm:px-7 sm:py-7 my-auto">
+            <div className="relative w-full max-w-[350px] bg-[#F5EFE4] border border-[#D8CDB8] rounded-[20px] sm:rounded-[28px] shadow-2xl px-4 py-4 sm:px-7 sm:py-7 my-auto">
 
                 {/* Success Overlay */}
                 {showSuccess && (
@@ -128,7 +138,7 @@ function Login() {
                 <NexusLogo />
 
                 {/* Heading */}
-                <h2 className="text-lg sm:text-[28px] font-bold text-[#2B2620] mt-1 sm:mt-2">
+                <h2 className="text-lg sm:text-[24px] font-bold text-[#2B2620] mt-1 sm:mt-2">
                     Welcome Back
                 </h2>
 
@@ -148,7 +158,9 @@ function Login() {
                             autoComplete="email"
                             placeholder="you@example.com"
                             className="mt-1.5 sm:mt-2 w-full h-8 sm:h-10 px-3 sm:px-3.5 rounded-xl border border-[#D8CDB8] bg-[#EDE6D6] focus:bg-white focus:border-[#B98B4E] focus:ring-4 focus:ring-[#B98B4E]/20 outline-none transition text-sm text-[#2B2620]"
-                            {...register("email")}
+                            {...register("email", {
+                                onChange: () => setLoginError(null),
+                            })}
                         />
                         {errors.email && (
                             <p className="text-red-600 text-xs mt-1.5">
@@ -161,16 +173,41 @@ function Login() {
                         <label className="text-xs font-semibold text-[#3A332B]">
                             Password
                         </label>
-                        <input
-                            type="password"
-                            autoComplete="current-password"
-                            placeholder="Password"
-                            className="mt-1.5 sm:mt-2 w-full h-8 sm:h-10 px-3 sm:px-3.5 rounded-xl border border-[#D8CDB8] bg-[#EDE6D6] focus:bg-white focus:border-[#B98B4E] focus:ring-4 focus:ring-[#B98B4E]/20 outline-none transition text-sm text-[#2B2620]"
-                            {...register("password")}
-                        />
+                        <div className="relative mt-1.5 sm:mt-2">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                autoComplete="current-password"
+                                placeholder="Password"
+                                className="w-full h-8 sm:h-10 px-3 sm:px-3.5 pr-9 rounded-xl border border-[#D8CDB8] bg-[#EDE6D6] focus:bg-white focus:border-[#B98B4E] focus:ring-4 focus:ring-[#B98B4E]/20 outline-none transition text-sm text-[#2B2620]"
+                                {...register("password", {
+                                    onChange: () => setLoginError(null),
+                                })}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C8272] hover:text-[#2B2620]"
+                            >
+                                {showPassword ? (
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18M10.58 10.58a2 2 0 002.83 2.83M9.88 4.24A9.77 9.77 0 0112 4c5 0 9 4 10 8-.32 1.12-.87 2.19-1.6 3.14M6.1 6.1C3.86 7.5 2.3 9.6 2 12c1 4 5 8 10 8 1.24 0 2.42-.24 3.5-.68" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z" />
+                                        <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                         {errors.password && (
                             <p className="text-red-600 text-xs mt-1.5">
                                 {errors.password.message}
+                            </p>
+                        )}
+                        {loginError && (
+                            <p className="text-red-600 text-xs mt-1.5">
+                                {loginError}
                             </p>
                         )}
                     </div>
@@ -203,31 +240,6 @@ function Login() {
                 </div>
 
                 {/* Google Auth Button */}
-                {/* <button
-                    type="button"
-                    onClick={()=>googleLogin()}
-                    className="w-full h-8 sm:h-10 rounded-xl border border-[#D8CDB8] bg-white hover:bg-[#EDE6D6] flex items-center justify-center gap-2 font-semibold text-xs sm:text-sm text-[#2B2620] transition"
-                >
-                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-                        <path
-                            fill="#4285F4"
-                            d="M23.49 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47c-.28 1.5-1.13 2.77-2.4 3.62v3h3.88c2.27-2.09 3.54-5.17 3.54-8.81z"
-                        />
-                        <path
-                            fill="#34A853"
-                            d="M12 24c3.24 0 5.95-1.07 7.93-2.92l-3.88-3c-1.08.72-2.45 1.15-4.05 1.15-3.11 0-5.75-2.1-6.69-4.92H1.3v3.09C3.27 21.3 7.31 24 12 24z"
-                        />
-                        <path
-                            fill="#FBBC05"
-                            d="M5.31 14.31A7.2 7.2 0 010 12c0-.8.14-1.58.38-2.31V6.6H1.3a12 12 0 000 10.8z"
-                        />
-                        <path
-                            fill="#EA4335"
-                            d="M12 4.77c1.76 0 3.35.6 4.6 1.8l3.45-3.45C17.94 1.19 15.24 0 12 0 7.31 0 3.27 2.7 1.3 6.6l4.01 3.09C6.25 6.87 8.89 4.77 12 4.77z"
-                        />
-                    </svg>
-                    Continue with Google
-                </button> */}
                 <GoogleLogin
                     onSuccess={(credentialResponse) => {
                         googleLogin(credentialResponse.credential!);

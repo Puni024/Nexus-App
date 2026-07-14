@@ -1,11 +1,11 @@
 export const Loader = () => {
   return (
-    <div className="flex items-center justify-center w-full h-[50px]">
+    <div className="flex items-center justify-center bg-[#EDE6D6] w-full min-h-[100vh]">
       <svg
-        className="h-[25%] w-[40%]"
+        className="h-[25%] w-[7%]"
         viewBox="0 0 120 30"
         xmlns="http://www.w3.org/2000/svg"
-        fill="#1976d2"
+        fill="#68471ce7"
       >
         {/* Left Dot */}
         <circle cx="15" cy="15" r="11.1295">
