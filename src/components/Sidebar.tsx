@@ -1,6 +1,5 @@
-// components/Sidebar.tsx
 import { NavIcon } from "./NavIcon";
-
+import { useAuth } from "../context/AuthContext";
 const navItems = [
     { label: "Application", icon: "home" },
     { label: "Users", icon: "users" },
@@ -16,6 +15,9 @@ interface SidebarProps {
 }
 
 export function Sidebar({ active, setActive, mobileNavOpen, setMobileNavOpen }: SidebarProps) {
+
+    const { logout } = useAuth();
+
     return (
         <>
             {/* Sidebar - desktop */}
@@ -51,7 +53,9 @@ export function Sidebar({ active, setActive, mobileNavOpen, setMobileNavOpen }: 
                 </nav>
 
                 <div className="px-2 py-[18px] border-t border-white/10">
-                    <button className="w-full flex items-center gap-2 px-2 py-[7px] rounded-md text-xs font-medium text-[#D8CDB8] hover:bg-white/5 hover:text-[#EDE6D6] transition-colors">
+                    <button className="w-full flex items-center gap-2 px-2 py-[7px] rounded-md text-xs font-medium text-[#D8CDB8] hover:bg-white/5 hover:text-[#EDE6D6] transition-colors"
+                    onClick={() => logout() }
+                    >
                         <NavIcon name="logout" />
                         Log out
                     </button>

@@ -1,4 +1,4 @@
-export const Loader = () => {
+const Loader = () => {
   return (
     <div className="flex items-center justify-center bg-[#EDE6D6] w-full min-h-[100vh]">
       <svg
@@ -70,3 +70,5 @@ export const Loader = () => {
     </div>
   );
 };
+
+export default Loader;

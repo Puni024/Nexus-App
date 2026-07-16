@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Loader } from '../Loader';
-import axios from 'axios';
+import Loader from '../Loader';
+import api from '../../common/api';
 
 export function Users() {
     const {
@@ -13,14 +13,12 @@ export function Users() {
     } = useQuery({
         queryKey: ['users'],
         queryFn: async () => {
-            const response = await axios.get(
-                'http://localhost:5000/api/auth/users'
-            );
-            if (!response) {
+            const response = await api.get('/auth/users');
+            if (!response.data) {
                 throw new Error('Failed to fetch users');
             }
-            
-            return response.data;
+            console.log('Fetched users:', response);
+            return response.data.users;
         },
     });
 
@@ -44,9 +42,9 @@ export function Users() {
                         {(error as Error).message}
                     </p> :
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-lg font-semibold text-gray-700">
-                        {data?.Users?.map((user: any, index: number) => {
-                            const isLastItem = index === data.Users.length - 1;
-                            const isOddCount = data.Users.length % 2 !== 0;
+                        {data?.map((user: any, index: number) => {
+                            const isLastItem = index === data.length - 1;
+                            const isOddCount = data.length % 2 !== 0;
 
                             return (
                                 <li
