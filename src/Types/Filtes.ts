@@ -1,12 +1,14 @@
 
 export type Theme = "light" | "dark";
 
+export type Role ="admin" | "user";
+
 export interface User {
-  id: number;
   name: string;
-  email: string;
+  role : Role;
   theme?: Theme;
 }
+
 
 export interface AuthContextType {
   user: User | null;
@@ -18,5 +20,4 @@ export interface AuthContextType {
 
   login: () => void;
   logout: () => Promise<void>;
-setIsAuthenticated: (isAuthenticated: boolean) => void;
 }

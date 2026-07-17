@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import NexusLogo from "../components/NexusLogo";
 import { GoogleLogin } from "@react-oauth/google";
-import api from "../common/api";
+import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
 import { loginSchema, type LoginFormData } from "../schemas/formSchema";

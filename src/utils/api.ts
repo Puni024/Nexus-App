@@ -15,10 +15,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (
+      logoutHandler &&
       error.response?.status === 401 &&
       error.config?.url !== "/auth/verify"
     ) {
-      logoutHandler?.();
+      logoutHandler();
     }
 
     return Promise.reject(error);
