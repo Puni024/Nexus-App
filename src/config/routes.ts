@@ -1,4 +1,4 @@
-import type { Role, AppRoute } from "../Types/Filtes";
+import type {  AppRoute } from "../Types/Filtes";
 
 
 export const appRoutes: AppRoute[] = [
