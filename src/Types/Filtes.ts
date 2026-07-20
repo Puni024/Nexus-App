@@ -9,6 +9,11 @@ export interface User {
   theme?: Theme;
 }
 
+export interface AppRoute {
+    path: string;
+    component: string;
+    roles: Role[];
+}
 
 export interface AuthContextType {
   user: User | null;

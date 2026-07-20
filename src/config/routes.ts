@@ -1,10 +1,5 @@
-import type { Role } from "../Types/Filtes";
+import type { Role, AppRoute } from "../Types/Filtes";
 
-export interface AppRoute {
-    path: string;
-    component: string;
-    roles: Role[];
-}
 
 export const appRoutes: AppRoute[] = [
     {

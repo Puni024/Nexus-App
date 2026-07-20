@@ -16,7 +16,7 @@ import NotFoundPage from "./components/NotFoundPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import { useAuth } from "./context/AuthContext";
-import { menuList } from "./config/helper";
+import { menuList, allRoutes } from "./config/helper"; // see note below
 
 function App() {
     const { loading, isAuthenticated, user } = useAuth();
@@ -33,8 +33,7 @@ function App() {
         Settings,
     } as const;
 
-    // Routes available for the current user
-    const routes = menuList(user?.role ?? "user");
+    const myRoutes = menuList(user?.role ?? "user");
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -64,19 +63,16 @@ function App() {
                     <Route
                         index
                         element={
-                            <Navigate
-                                to={routes[0].path}
-                                replace
-                            />
+                            myRoutes.length
+                                ? <Navigate to={myRoutes[0].path} replace />
+                                : <NotFoundPage />
                         }
                     />
 
-                    {/* Dynamic pages */}
-                    {routes.map((route) => {
+                    {/* Register every route that exists in the app */}
+                    {allRoutes.map((route) => {
                         const Component =
-                            pageComponents[
-                                route.component as keyof typeof pageComponents
-                            ];
+                            pageComponents[route.component as keyof typeof pageComponents];
 
                         return (
                             <Route
@@ -90,14 +86,9 @@ function App() {
                             />
                         );
                     })}
-
                 </Route>
 
-                <Route
-                    path="*"
-                    element={<NotFoundPage />}
-                />
-
+                <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </div>
     );
