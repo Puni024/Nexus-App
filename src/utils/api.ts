@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://nexus-app-server.onrender.com/api",
+  baseURL: import.meta.env.BACKEND_URL,
   withCredentials: true,
 });
 
