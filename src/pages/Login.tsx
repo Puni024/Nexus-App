@@ -20,6 +20,10 @@ function Login() {
     const [registerError, setRegisterError] = useState<string | null>(null);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [isGoogleLoggingIn, setIsGoogleLoggingIn] = useState(false)
+
     const {
         register,
         handleSubmit,
@@ -41,6 +45,7 @@ function Login() {
     const onSubmit = async (data: LoginFormData) => {
         try {
             setLoginError(null);
+            setIsLoggingIn(true);
 
             await api.post("/auth/login", {
             email: data.email,
@@ -58,11 +63,13 @@ function Login() {
             setLoginError(
             error.response?.data?.message || "Login failed. Please try again."
             );
-        }
+        } finally {
+        setIsLoggingIn(false);
+    }
     };
 
     const googleLogin = async (googlecredential: string) => {
-
+        setIsGoogleLoggingIn(true);
         try {
             const res = await api.post("/auth/google", {
                 token: googlecredential,
@@ -84,12 +91,14 @@ function Login() {
 
         } catch (error) {
             setLoginError("Google login failed. Please try again.");
-        }
+        } finally {
+        setIsGoogleLoggingIn(false);
+    }
 
     };
 
     const onRegisterSubmit = async (data: RegisterFormData) => {
-
+    setIsRegistering(true);
     try {
     const res = await api.post("/auth/register", {
         name: data.name,
@@ -114,8 +123,9 @@ function Login() {
     setRegisterError(
         error.response?.data?.message || "Registration failed.2.0"
     );
+    } finally {
+        setIsRegistering(false);
     }
-
 };
 
     const handleShowRegister = () => {
@@ -268,19 +278,30 @@ function Login() {
                             </div>
 
                             <div className="flex justify-end mb-2 sm:mb-3.5">
-                                <button
+                                {/* <button
                                     type="button"
                                     className="text-[11px] font-semibold text-[#B98B4E] hover:underline"
                                 >
                                     Forgot password?
-                                </button>
+                                </button> */}
                             </div>
 
                             <button
                                 type="submit"
-                                className="w-full h-[29px] sm:h-9 rounded-xl bg-[#2B2620] text-[#EDE6D6] font-semibold text-xs hover:scale-[1.02] transition-all duration-300 shadow-lg"
+                                disabled={isLoggingIn}
+                                className="w-full h-[29px] sm:h-9 rounded-xl bg-[#2B2620] text-[#EDE6D6] font-semibold text-xs hover:scale-[1.02] transition-all duration-300 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-1.5"
                             >
-                                Sign In
+                                {isLoggingIn ? (
+                                    <>
+                                        <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                        </svg>
+                                        Signing in...
+                                    </>
+                                ) : (
+                                    "Sign In"
+                                )}
                             </button>
 
                         </form>
@@ -295,7 +316,7 @@ function Login() {
                         </div>
 
                         {/* Google Auth Button */}
-                        <GoogleLogin
+                        {/* <GoogleLogin
                             onSuccess={(credentialResponse) => {
                                 googleLogin(credentialResponse.credential!);
                             }}
@@ -307,7 +328,41 @@ function Login() {
                             text="continue_with"
                             width="100%"
                             logo_alignment="left"
-                        />
+                        /> */}
+                        {/* Google Auth Button */}
+                        <div className="relative">
+                            <div
+                                className={
+                                    isGoogleLoggingIn
+                                        ? "pointer-events-none opacity-50 transition-opacity"
+                                        : "transition-opacity"
+                                }
+                            >
+                                <GoogleLogin
+                                    onSuccess={(credentialResponse) => {
+                                        googleLogin(credentialResponse.credential!);
+                                    }}
+                                    onError={() => console.log("Login Failed")}
+                                    useOneTap={false}
+                                    theme="outline"
+                                    size="medium"
+                                    shape="rectangular"
+                                    text="continue_with"
+                                    width="100%"
+                                    logo_alignment="left"
+                                />
+                            </div>
+
+                            {isGoogleLoggingIn && (
+                                <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-[#F5EFE4]/70 rounded-md">
+                                    <svg className="w-3.5 h-3.5 animate-spin text-[#2B2620]" viewBox="0 0 24 24" fill="none">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                    </svg>
+                                    <span className="text-[11px] font-semibold text-[#2B2620]">Signing in...</span>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Toggle to Register */}
                         <p className="text-center text-[11px] sm:text-xs text-[#8C8272] mt-3 sm:mt-4">
@@ -421,9 +476,20 @@ function Login() {
 
                             <button
                                 type="submit"
-                                className="w-full h-[29px] sm:h-9 rounded-xl bg-[#2B2620] text-[#EDE6D6] font-semibold text-xs hover:scale-[1.02] transition-all duration-300 shadow-lg mt-3 sm:mt-3.5"
+                                disabled={isRegistering}
+                                className="w-full h-[29px] sm:h-9 rounded-xl bg-[#2B2620] text-[#EDE6D6] font-semibold text-xs hover:scale-[1.02] transition-all duration-300 shadow-lg mt-3 sm:mt-3.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-1.5"
                             >
-                                Create Account
+                                {isRegistering ? (
+                                    <>
+                                        <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                        </svg>
+                                        Creating account...
+                                    </>
+                                ) : (
+                                    "Create Account"
+                                )}
                             </button>
 
                         </form>
