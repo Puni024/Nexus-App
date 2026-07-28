@@ -305,7 +305,7 @@ function Login() {
                                     type="button"
                                     className="text-[11px] font-semibold text-[#B98B4E] hover:underline"
                                 >
-                                    Forgot password?
+                                    {/* Forgot password? */}
                                 </button>
                             </div>
 
