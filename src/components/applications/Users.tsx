@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import Loader from '../Loader';
 import api from '../../utils/api';
 
-export function Users() {
+export default function Users() {
     const {
         data,
         isLoading,

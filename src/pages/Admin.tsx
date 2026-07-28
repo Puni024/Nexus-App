@@ -1,7 +1,7 @@
 import AppLayout from "../components/AppLayout";
 
 function Home() {
-  return <AppLayout section="home" />;
+  return <AppLayout section="admin" />;
 }
 
 export default Home;

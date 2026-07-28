@@ -1,7 +1,8 @@
-import {appRoutes} from "./routes"
-import type { Role, AppRoute } from "../Types/Filtes";
+import { sectionRoutes } from "./routes";
+import type { Role, Section, AppRoute } from "../Types/Filtes";
 
-export const menuList = (role: Role) =>
-  appRoutes.filter((route) => route.roles.includes(role));
+export const getRoutesForSection = (section: Section, role: Role): AppRoute[] =>
+  sectionRoutes[section].filter((route) => route.roles.includes(role));
 
-export const allRoutes: AppRoute[] = appRoutes;
+export const getDefaultPathForRole = (role: Role): string =>
+  role === "admin" ? "/admin" : "/home";

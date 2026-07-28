@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import NexusLogo from "../components/NexusLogo";
@@ -19,6 +19,32 @@ function Login() {
     const [isRegisterView, setIsRegisterView] = useState(false);
     const [registerError, setRegisterError] = useState<string | null>(null);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+
+    // --- Google button ready-state ---
+    const [googleReady, setGoogleReady] = useState(false);
+
+    useEffect(() => {
+        // Poll for the Google Identity Services script to finish initializing.
+        // This prevents the "placeholder button -> real button" flash on production.
+        let cancelled = false;
+
+        const checkGoogleReady = () => {
+            if (cancelled) return;
+
+            const w = window as any;
+            if (w.google?.accounts?.id) {
+                setGoogleReady(true);
+            } else {
+                setTimeout(checkGoogleReady, 100);
+            }
+        };
+
+        checkGoogleReady();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const {
         register,
@@ -295,19 +321,32 @@ function Login() {
                         </div>
 
                         {/* Google Auth Button */}
-                        <GoogleLogin
-                            onSuccess={(credentialResponse) => {
-                                googleLogin(credentialResponse.credential!);
-                            }}
-                            onError={() => console.log("Login Failed")}
-                            useOneTap={false}
-                            theme="outline"
-                            size="medium"
-                            shape="rectangular"
-                            text="continue_with"
-                            width="100%"
-                            logo_alignment="left"
-                        />
+                        <div className="relative w-full h-9">
+                            {/* Skeleton shown until Google's script is fully ready */}
+                            {!googleReady && (
+                                <div className="absolute inset-0 rounded-xl border border-[#D8CDB8] bg-[#EDE6D6] animate-pulse" />
+                            )}
+
+                            <div
+                                className={`transition-opacity duration-200 ${
+                                    googleReady ? "opacity-100" : "opacity-0 pointer-events-none"
+                                }`}
+                            >
+                                <GoogleLogin
+                                    onSuccess={(credentialResponse) => {
+                                        googleLogin(credentialResponse.credential!);
+                                    }}
+                                    onError={() => console.log("Login Failed")}
+                                    useOneTap={false}
+                                    theme="outline"
+                                    size="medium"
+                                    shape="rectangular"
+                                    text="continue_with"
+                                    width="100%"
+                                    logo_alignment="left"
+                                />
+                            </div>
+                        </div>
 
                         {/* Toggle to Register */}
                         <p className="text-center text-[11px] sm:text-xs text-[#8C8272] mt-3 sm:mt-4">

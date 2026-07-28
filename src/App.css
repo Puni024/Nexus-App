@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
 html,
 body,
 #root {
@@ -5,4 +8,29 @@ body,
   height: 100%;
   margin: 0;
   overflow: hidden;
+}
+
+:root {
+  --bg: #EDE6D6;
+  --card: #F5EFE4;
+  --card-strip: #2B2620;
+  --border: #D8CDB8;
+  --text: #2B2620;
+  --text-muted: #8C8272;
+}
+
+.dark {
+  --bg: #3D3D3D;
+  --card: #494949;
+  --card-strip: #5C5C5C;
+  --border: #5C5C5C;
+  --text: #EDE6D6;
+  --text-muted: #B5B5B5;
+}
+
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }

@@ -1,29 +1,30 @@
 import { Navigate } from "react-router-dom";
+import type { ReactNode } from "react";
 
 import { useAuth } from "../context/AuthContext";
+import NotFoundPage from "./NotFoundPage";
+import Loader from "./Loader";
 import type { Role } from "../Types/Filtes";
 
 interface ProtectedRouteProps {
-    roles: Role[];
-    children: React.ReactNode;
+  children: ReactNode;
+  roles: Role[];
 }
 
-export default function ProtectedRoute({
-    roles,
-    children,
-}: ProtectedRouteProps) {
+function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
+  const { isAuthenticated, loading, user } = useAuth();
 
-    const { loading, isAuthenticated, user } = useAuth();
+  if (loading) return <Loader />;
 
-    if (loading) return null;
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
-    if (!isAuthenticated) {
-        return <Navigate to="/" replace />;
-    }
+   if (!user || !roles.includes(user.role)) {
+    return <NotFoundPage />;
+  }
 
-    if (!user || !roles.includes(user.role)) {
-        return <Navigate to="/home" replace />;
-    }
-
-    return <>{children}</>;
+  return <>{children}</>;
 }
+
+export default ProtectedRoute;
