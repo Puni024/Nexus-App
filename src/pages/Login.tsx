@@ -77,8 +77,7 @@ function Login() {
             setShowSuccess("login");
 
             setTimeout(() => {
-                login();
-                setShowSuccess(undefined);
+                login(); // triggers redirect — don't reset showSuccess here, let navigation unmount this component
             }, 1500);
 
         } catch (error: any) {
@@ -108,9 +107,7 @@ function Login() {
                 setShowSuccess("login");
 
                 setTimeout(() => {
-                    login();
-                    setShowSuccess(undefined);
-                    setGoogleLoading(false);
+                    login(); // triggers redirect — don't reset showSuccess/googleLoading here, let navigation unmount this component
                 }, 1500);
             }
 
