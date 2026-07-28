@@ -69,20 +69,20 @@ function Login() {
             setLoginError(null);
 
             await api.post("/auth/login", {
-            email: data.email,
-            password: data.password,
+                email: data.email,
+                password: data.password,
             });
 
             setShowSuccess("login");
 
             setTimeout(() => {
-            login();
-            setShowSuccess(undefined);
+                login();
+                setShowSuccess(undefined);
             }, 1500);
 
         } catch (error: any) {
             setLoginError(
-            error.response?.data?.message || "Login failed. Please try again."
+                error.response?.data?.message || "Login failed. Please try again."
             );
         }
     };
@@ -116,33 +116,33 @@ function Login() {
 
     const onRegisterSubmit = async (data: RegisterFormData) => {
 
-    try {
-    const res = await api.post("/auth/register", {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-    });
-    if (!res || res.status !== 201) {
-        throw new Error(res?.data?.message);
-    }
+        try {
+            const res = await api.post("/auth/register", {
+                name: data.name,
+                email: data.email,
+                password: data.password,
+            });
+            if (!res || res.status !== 201) {
+                throw new Error(res?.data?.message);
+            }
 
-    setShowSuccess("register");
+            setShowSuccess("register");
 
-    setTimeout(() => {
-            resetRegisterForm();   // clear register form fields
-            resetLoginForm();      // ensure login form is empty when we land back on it
-            setLoginError(null);
-            setIsRegisterView(false);
-            setShowSuccess(undefined);
-        }, 1500);
+            setTimeout(() => {
+                resetRegisterForm();   // clear register form fields
+                resetLoginForm();      // ensure login form is empty when we land back on it
+                setLoginError(null);
+                setIsRegisterView(false);
+                setShowSuccess(undefined);
+            }, 1500);
 
-    } catch (error: any) {
-    setRegisterError(
-        error.response?.data?.message || "Registration failed.2.0"
-    );
-    }
+        } catch (error: any) {
+            setRegisterError(
+                error.response?.data?.message || "Registration failed.2.0"
+            );
+        }
 
-};
+    };
 
     const handleShowRegister = () => {
         resetRegisterForm();   // clear any stale/autofilled values before opening
@@ -199,7 +199,7 @@ function Login() {
                         </div>
 
                         <h2 className="mt-3.5 sm:mt-6 text-base sm:text-xl font-bold text-[#2B2620] animate-fadeIn text-center px-4">
-                           {(showSuccess === "login") ? "Verification Successful" : "Registration Successful"}
+                            {(showSuccess === "login") ? "Verification Successful" : "Registration Successful"}
                         </h2>
 
                         <p className="text-xs sm:text-sm text-[#8C8272] mt-1 sm:mt-2.5 animate-fadeIn">
@@ -321,16 +321,15 @@ function Login() {
                         </div>
 
                         {/* Google Auth Button */}
-                        <div className="relative w-full h-9">
+                        <div className="relative w-full h-9 flex items-center justify-center">
                             {/* Skeleton shown until Google's script is fully ready */}
                             {!googleReady && (
                                 <div className="absolute inset-0 rounded-xl border border-[#D8CDB8] bg-[#EDE6D6] animate-pulse" />
                             )}
 
                             <div
-                                className={`transition-opacity duration-200 ${
-                                    googleReady ? "opacity-100" : "opacity-0 pointer-events-none"
-                                }`}
+                                className={`w-full flex justify-center transition-opacity duration-200 ${googleReady ? "opacity-100" : "opacity-0 pointer-events-none"
+                                    }`}
                             >
                                 <GoogleLogin
                                     onSuccess={(credentialResponse) => {
