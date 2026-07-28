@@ -22,6 +22,7 @@ function Login() {
 
     // --- Google button ready-state ---
     const [googleReady, setGoogleReady] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     useEffect(() => {
         // Poll for the Google Identity Services script to finish initializing.
@@ -90,12 +91,16 @@ function Login() {
     const googleLogin = async (googlecredential: string) => {
 
         try {
+            setGoogleLoading(true);
+            setLoginError(null);
+
             const res = await api.post("/auth/google", {
                 token: googlecredential,
             });
 
             if (!res) {
                 setLoginError("Login failed. Please try again.");
+                setGoogleLoading(false);
                 return;
             }
 
@@ -105,11 +110,13 @@ function Login() {
                 setTimeout(() => {
                     login();
                     setShowSuccess(undefined);
+                    setGoogleLoading(false);
                 }, 1500);
             }
 
         } catch (error) {
             setLoginError("Google login failed. Please try again.");
+            setGoogleLoading(false);
         }
 
     };
@@ -323,12 +330,40 @@ function Login() {
                         {/* Google Auth Button */}
                         <div className="relative w-full h-9 flex items-center justify-center">
                             {/* Skeleton shown until Google's script is fully ready */}
-                            {!googleReady && (
+                            {!googleReady && !googleLoading && (
                                 <div className="absolute inset-0 rounded-xl border border-[#D8CDB8] bg-[#EDE6D6] animate-pulse" />
                             )}
 
+                            {/* Loading overlay shown while verifying with backend */}
+                            {googleLoading && (
+                                <div className="absolute inset-0 z-10 rounded-xl border border-[#D8CDB8] bg-[#F5EFE4] flex items-center justify-center gap-2">
+                                    <svg
+                                        className="w-3.5 h-3.5 animate-spin text-[#B98B4E]"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle
+                                            className="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                        />
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                        />
+                                    </svg>
+                                    <span className="text-[11px] font-medium text-[#8C8272]">
+                                        Verifying...
+                                    </span>
+                                </div>
+                            )}
+
                             <div
-                                className={`w-full flex justify-center transition-opacity duration-200 ${googleReady ? "opacity-100" : "opacity-0 pointer-events-none"
+                                className={`w-full flex justify-center transition-opacity duration-200 ${googleReady && !googleLoading ? "opacity-100" : "opacity-0 pointer-events-none"
                                     }`}
                             >
                                 <GoogleLogin
