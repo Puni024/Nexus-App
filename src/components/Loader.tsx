@@ -1,11 +1,11 @@
 const Loader = () => {
   return (
-    <div className="flex items-center justify-center bg-[#EDE6D6] w-full min-h-[100vh]">
+    <div className="flex items-center justify-center bg-[#EDE6D6] dark:bg-[#1C1710] w-full min-h-[100vh] transition-colors duration-200">
       <svg
-        className="h-[25%] w-[7%]"
+        className="h-[25%] w-[7%] text-[#68471ce7] dark:text-[#D9B98A]"
         viewBox="0 0 120 30"
         xmlns="http://www.w3.org/2000/svg"
-        fill="#68471ce7"
+        fill="currentColor"
       >
         {/* Left Dot */}
         <circle cx="15" cy="15" r="11.1295">

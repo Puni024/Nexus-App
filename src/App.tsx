@@ -8,7 +8,7 @@ import Admin from "./pages/Admin";
 import PendingVerification from "./pages/PendingVerification";
 
 import Overview from "./pages/subpages/Overview";
-import Application from "./pages/subpages/Application";
+import Newsletter from "./pages/subpages/Newsletter";
 import Users from "./pages/subpages/Users";
 import Reports from "./pages/subpages/Reports";
 import Settings from "./pages/subpages/Settings";
@@ -25,7 +25,7 @@ import type { AppRoute, Section } from "./Types/Filtes";
 
 const pageComponents = {
   Overview,
-  Application,
+  Newsletter,
   Users,
   Reports,
   Settings,
