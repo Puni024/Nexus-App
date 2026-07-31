@@ -9,7 +9,22 @@ interface UserRow {
     isAdmin: boolean;
     signedwith: string;
     isVerified: boolean;
-    isActive: boolean;
+    last_visited: string;
+}
+
+function isActiveToday(lastVisited: string | null | undefined): boolean {
+    if (!lastVisited) return false;
+
+    const last = new Date(lastVisited);
+    if (Number.isNaN(last.getTime())) return false;
+
+    const now = new Date();
+
+    return (
+        last.getFullYear() === now.getFullYear() &&
+        last.getMonth() === now.getMonth() &&
+        last.getDate() === now.getDate()
+    );
 }
 
 const Overview = () => {
@@ -39,12 +54,12 @@ const Overview = () => {
 
     const stats = useMemo(() => {
         const total = users.length;
-        const active = users.filter((u) => u.isActive).length;
-        const inactive = total - active;
+        const activeToday = users.filter((u) => isActiveToday(u.last_visited)).length;
+        const notActiveToday = total - activeToday;
         const verified = users.filter((u) => u.isVerified).length;
         const unverified = total - verified;
 
-        return { total, active, inactive, verified, unverified };
+        return { total, activeToday, notActiveToday, verified, unverified };
     }, [users]);
 
     const pendingUsers = useMemo(
@@ -164,9 +179,9 @@ const Overview = () => {
                 <KpiCard label="Total Users" value={stats.total} accent={accents.total} />
 
                 <SplitKpiCard
-                    title="Active / Inactive"
-                    left={{ label: "Active", value: stats.active, accent: accents.activeGreen }}
-                    right={{ label: "Inactive", value: stats.inactive, accent: accents.inactiveRed }}
+                    title="Active Today / Not Active Today"
+                    left={{ label: "Active Today", value: stats.activeToday, accent: accents.activeGreen }}
+                    right={{ label: "Not Active Today", value: stats.notActiveToday, accent: accents.inactiveRed }}
                 />
 
                 <SplitKpiCard
