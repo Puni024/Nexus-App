@@ -12,11 +12,10 @@ interface UserRow {
     last_visited: string;
 }
 
-type StatusFilter = "active" | "inactive" | null;
 type SignedFilter = "google" | "email" | null;
 type VerifiedFilter = "verified" | "unverified" | null;
 
-const ACTIVE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes, matches heartbeat interval on the client
+const ACTIVE_WINDOW_MS = 5 * 60 * 60 * 1000; // 5 hours
 
 function isUserActive(lastVisited: string | null | undefined): boolean {
     if (!lastVisited) return false;
@@ -45,7 +44,7 @@ const Users = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>(null);
+    const [onlyActive, setOnlyActive] = useState(false);
     const [signedFilter, setSignedFilter] = useState<SignedFilter>(null);
     const [verifiedFilter, setVerifiedFilter] = useState<VerifiedFilter>(null);
 
@@ -72,8 +71,7 @@ const Users = () => {
         return users.filter((u) => {
             const active = isUserActive(u.last_visited);
 
-            if (statusFilter === "active" && !active) return false;
-            if (statusFilter === "inactive" && active) return false;
+            if (onlyActive && !active) return false;
 
             if (signedFilter === "google" && u.signedwith?.toLowerCase() !== "google") return false;
             if (signedFilter === "email" && u.signedwith?.toLowerCase() !== "email") return false;
@@ -91,7 +89,7 @@ const Users = () => {
 
             return true;
         });
-    }, [users, statusFilter, signedFilter, verifiedFilter, search]);
+    }, [users, onlyActive, signedFilter, verifiedFilter, search]);
 
     // ---------- Filter chip helper ----------
     interface Chip<T> {
@@ -151,16 +149,25 @@ const Users = () => {
 
                     <div className="space-y-1.5">
                         <p className="text-[11px] uppercase tracking-wide text-[#8C8272] dark:text-[#A69C8C]">
-                            Status
+                            Activity
                         </p>
-                        <FilterGroup
-                            chips={[
-                                { label: "Active", value: "active" },
-                                { label: "Inactive", value: "inactive" },
-                            ]}
-                            selected={statusFilter}
-                            onSelect={setStatusFilter}
-                        />
+                        <button
+                            onClick={() => setOnlyActive((prev) => !prev)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors
+                                ${
+                                    onlyActive
+                                        ? "bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] border-[#2B2620] dark:border-[#EDE6D6]"
+                                        : "bg-[#F5EFE4] dark:bg-[#211D18] text-[#2B2620] dark:text-[#EDE6D6] border-[#D8CDB8] dark:border-[#3A332B] hover:bg-[#EDE6D6] dark:hover:bg-[#2B2620]"
+                                }`}
+                        >
+                            Active in last 5h
+
+                            {onlyActive && (
+                                <span className="text-[#EDE6D6] dark:text-[#2B2620] opacity-80">
+                                    ✕
+                                </span>
+                            )}
+                        </button>
                     </div>
 
                     <div className="space-y-1.5">
