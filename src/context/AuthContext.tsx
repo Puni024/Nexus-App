@@ -109,6 +109,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ---------------- HEARTBEAT (keeps lastActiveAt fresh while logged in) ----------------
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const ping = () => api.patch("/auth/heartbeat").catch(() => {});
+    ping(); // send immediately when user becomes authenticated
+
+    const interval = setInterval(ping, 2 * 60 * 1000); // every 2 minutes
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   // ---------------- LOCAL SYNC (no API call, other components call their own APIs then patch here) ----------------
 
   const updateUser: AuthContextType["updateUser"] = useCallback((patch) => {

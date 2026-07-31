@@ -12,6 +12,12 @@ import Newsletter from "./pages/subpages/Newsletter";
 import Users from "./pages/subpages/Users";
 import Reports from "./pages/subpages/Reports";
 import Settings from "./pages/subpages/Settings";
+import Contribution from "./pages/subpages/Contribution";
+import Approvals from "./pages/subpages/Approvals";
+import Newsletter_Hub from "./pages/subpages/Newsletter_Hub";
+import People from "./pages/subpages/People";
+import Publish from "./pages/subpages/Publish";
+import AllFiles from "./pages/subpages/AllFiles";
 
 import Loader from "./components/Loader";
 import NotFoundPage from "./components/NotFoundPage";
@@ -24,6 +30,12 @@ import { getRoutesForSection, getDefaultPathForRole } from "./config/helper";
 import type { AppRoute, Section } from "./Types/Filtes";
 
 const pageComponents = {
+  AllFiles,
+  Publish,
+  People,
+  Newsletter_Hub,
+  Approvals,
+  Contribution,
   Overview,
   Newsletter,
   Users,

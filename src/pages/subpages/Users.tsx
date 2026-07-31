@@ -9,12 +9,36 @@ interface UserRow {
     isAdmin: boolean;
     signedwith: string;
     isVerified: boolean;
-    isActive: boolean;
+    last_visited: string;
 }
 
 type StatusFilter = "active" | "inactive" | null;
 type SignedFilter = "google" | "email" | null;
 type VerifiedFilter = "verified" | "unverified" | null;
+
+const ACTIVE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes, matches heartbeat interval on the client
+
+function isUserActive(lastVisited: string | null | undefined): boolean {
+    if (!lastVisited) return false;
+    const last = new Date(lastVisited).getTime();
+    if (Number.isNaN(last)) return false;
+    return Date.now() - last < ACTIVE_WINDOW_MS;
+}
+
+function formatLastVisited(lastVisited: string | null | undefined): string {
+    if (!lastVisited) return "Never";
+
+    const date = new Date(lastVisited);
+    if (Number.isNaN(date.getTime())) return "Never";
+
+    return date.toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
 
 const Users = () => {
     const [users, setUsers] = useState<UserRow[]>([]);
@@ -46,8 +70,10 @@ const Users = () => {
 
     const filteredUsers = useMemo(() => {
         return users.filter((u) => {
-            if (statusFilter === "active" && !u.isActive) return false;
-            if (statusFilter === "inactive" && u.isActive) return false;
+            const active = isUserActive(u.last_visited);
+
+            if (statusFilter === "active" && !active) return false;
+            if (statusFilter === "inactive" && active) return false;
 
             if (signedFilter === "google" && u.signedwith?.toLowerCase() !== "google") return false;
             if (signedFilter === "email" && u.signedwith?.toLowerCase() !== "email") return false;
@@ -256,11 +282,11 @@ const Users = () => {
                         <table className="w-full text-sm table-fixed shrink-0">
                             <thead className="bg-[#2B2620] dark:bg-[#1B1712] text-[#EDE6D6]">
                                 <tr className="text-left text-[11px] uppercase tracking-wide">
-                                    <th className="px-4 py-3 font-medium w-[15%]">Active</th>
-                                    <th className="px-4 py-3 font-medium w-[22%]">Name</th>
-                                    <th className="px-4 py-3 font-medium w-[30%]">Email</th>
-                                    <th className="px-4 py-3 font-medium w-[18%]">Signed With</th>
-                                    <th className="px-4 py-3 font-medium w-[15%]">Verified</th>
+                                    <th className="px-4 py-3 font-medium w-[20%]">Name</th>
+                                    <th className="px-4 py-3 font-medium w-[26%]">Email</th>
+                                    <th className="px-4 py-3 font-medium w-[15%]">Signed With</th>
+                                    <th className="px-4 py-3 font-medium w-[14%]">Verified</th>
+                                    <th className="px-4 py-3 font-medium w-[25%]">Last Visited</th>
                                 </tr>
                             </thead>
                         </table>
@@ -269,36 +295,45 @@ const Users = () => {
                         <div className="overflow-y-auto">
                             <table className="w-full text-sm table-fixed">
                                 <tbody>
-                                    {filteredUsers.map((u) => (
-                                        <tr
-                                            key={u.id}
-                                            className="border-b border-[#D8CDB8] dark:border-[#3A332B] last:border-0 hover:bg-[#EDE6D6]/60 dark:hover:bg-[#211D18]/60"
-                                        >
-                                            <td className="px-4 py-3 w-[15%]">
-                                                <span
-                                                    className={`inline-block w-2.5 h-2.5 rounded-full ${
-                                                        u.isActive ? "bg-green-500" : "bg-red-600"
-                                                    }`}
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3 w-[22%] text-[#2B2620] dark:text-[#EDE6D6]">{u.name}</td>
-                                            <td className="px-4 py-3 w-[30%] text-[#2B2620] dark:text-[#EDE6D6]">{u.email}</td>
-                                            <td className="px-4 py-3 w-[18%] text-[#2B2620] dark:text-[#EDE6D6] capitalize">
-                                                {u.signedwith}
-                                            </td>
-                                            <td className="px-4 py-3 w-[15%]">
-                                                <span
-                                                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                                        u.isVerified
-                                                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                                                    }`}
-                                                >
-                                                    {u.isVerified ? "Verified" : "Not Verified"}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {filteredUsers.map((u) => {
+                                        const active = isUserActive(u.last_visited);
+
+                                        return (
+                                            <tr
+                                                key={u.id}
+                                                className="border-b border-[#D8CDB8] dark:border-[#3A332B] last:border-0 hover:bg-[#EDE6D6]/60 dark:hover:bg-[#211D18]/60"
+                                            >
+                                                <td className="px-4 py-3 w-[20%] text-[#2B2620] dark:text-[#EDE6D6]">{u.name}</td>
+                                                <td className="px-4 py-3 w-[26%] text-[#2B2620] dark:text-[#EDE6D6]">{u.email}</td>
+                                                <td className="px-4 py-3 w-[15%] text-[#2B2620] dark:text-[#EDE6D6] capitalize">
+                                                    {u.signedwith}
+                                                </td>
+                                                <td className="px-4 py-3 w-[14%]">
+                                                    <span
+                                                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                                                            u.isVerified
+                                                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                                                : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                                        }`}
+                                                    >
+                                                        {u.isVerified ? "Verified" : "Not Verified"}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 w-[25%]">
+                                                    <span className="inline-flex items-center gap-1.5">
+                                                        <span
+                                                            className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                                                                active ? "bg-green-500" : "bg-[#8C8272] dark:bg-[#A69C8C]"
+                                                            }`}
+                                                        />
+                                                        <span className="text-[#2B2620] dark:text-[#EDE6D6]">
+                                                            {formatLastVisited(u.last_visited)}
+                                                        </span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
