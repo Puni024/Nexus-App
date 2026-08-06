@@ -112,14 +112,12 @@ function UserAvatar({
                     ref={imgRef}
                     src={src as string}
                     alt={name || "User"}
-                    referrerPolicy="no-referrer"
                     onLoad={() => setStatus("loaded")}
                     onError={() => setStatus("error")}
-                    className={`rounded-full object-cover w-full h-full ${
-                        status === "loaded"
+                    className={`rounded-full object-cover w-full h-full ${status === "loaded"
                             ? "opacity-100"
                             : "opacity-0 absolute inset-0"
-                    }`}
+                        }`}
                 />
 
                 {status === "loading" && (
