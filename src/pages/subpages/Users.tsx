@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../utils/api";
 import Loader from "../../components/Loader";
 
@@ -14,6 +15,7 @@ interface UserRow {
 
 type SignedFilter = "google" | "email" | null;
 type VerifiedFilter = "verified" | "unverified" | null;
+type SortOrder = "asc" | "desc";
 
 const ACTIVE_WINDOW_MS = 5 * 60 * 60 * 1000; // 5 hours
 
@@ -40,6 +42,8 @@ function formatLastVisited(lastVisited: string | null | undefined): string {
 }
 
 const Users = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const [users, setUsers] = useState<UserRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -48,7 +52,11 @@ const Users = () => {
     const [signedFilter, setSignedFilter] = useState<SignedFilter>(null);
     const [verifiedFilter, setVerifiedFilter] = useState<VerifiedFilter>(null);
 
-    const [search, setSearch] = useState("");
+    // Initialize search straight from the URL, so a deep-link like
+    // /admin/users?search=John lands already filtered.
+    const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
+
+    const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -67,8 +75,35 @@ const Users = () => {
         fetchUsers();
     }, [fetchUsers]);
 
+    // Keep local `search` state in sync if the URL changes from OUTSIDE this
+    // component - e.g. clicking a profile card elsewhere navigates here with
+    // a new ?search= value while Users is already mounted (no remount).
+    useEffect(() => {
+        const urlSearch = searchParams.get("search") ?? "";
+        setSearch((prev) => (prev === urlSearch ? prev : urlSearch));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
+    // Mirror local `search` back into the URL as the user types, so the URL
+    // is always shareable/refreshable and stays the single source of truth.
+    useEffect(() => {
+        setSearchParams(
+            (prev) => {
+                const next = new URLSearchParams(prev);
+                if (search.trim()) {
+                    next.set("search", search);
+                } else {
+                    next.delete("search");
+                }
+                return next;
+            },
+            { replace: true }
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search]);
+
     const filteredUsers = useMemo(() => {
-        return users.filter((u) => {
+        const result = users.filter((u) => {
             const active = isUserActive(u.last_visited);
 
             if (onlyActive && !active) return false;
@@ -89,7 +124,19 @@ const Users = () => {
 
             return true;
         });
-    }, [users, onlyActive, signedFilter, verifiedFilter, search]);
+
+        const sorted = [...result].sort((a, b) => {
+            const aTime = a.last_visited ? new Date(a.last_visited).getTime() : 0;
+            const bTime = b.last_visited ? new Date(b.last_visited).getTime() : 0;
+
+            const aVal = Number.isNaN(aTime) ? 0 : aTime;
+            const bVal = Number.isNaN(bTime) ? 0 : bTime;
+
+            return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+        });
+
+        return sorted;
+    }, [users, onlyActive, signedFilter, verifiedFilter, search, sortOrder]);
 
     // ---------- Filter chip helper ----------
     interface Chip<T> {
@@ -201,7 +248,7 @@ const Users = () => {
                 </div>
 
                 {/* Right: Search ~15% */}
-                <div className="md:basis-[15%] flex items-center border-t md:border-t-0 border-[#D8CDB8] dark:border-[#3A332B] p-4">
+                <div className="md:basis-[17%] flex items-center border-t md:border-t-0 border-[#D8CDB8] dark:border-[#3A332B] p-4">
                     <div className="w-full flex items-center h-9 px-3 rounded-md bg-white dark:bg-[#211D18] border border-[#D8CDB8] dark:border-[#3A332B] focus-within:border-[#B98B4E] transition-colors">
                         <svg
                             className="w-3.5 h-3.5 text-[#8C8272] dark:text-[#A69C8C] shrink-0"
@@ -225,7 +272,7 @@ const Users = () => {
                         {search && (
                             <button
                                 onClick={() => setSearch("")}
-                                className="text-[#8C8272] dark:text-[#A69C8C] hover:text-[#2B2620] dark:hover:text-[#EDE6D6] shrink-0"
+                                className="text-[#8C8272] ml-2 dark:text-[#A69C8C] hover:text-[#2B2620] dark:hover:text-[#EDE6D6] shrink-0 cursor-pointer transition-colors"
                                 aria-label="Clear search"
                             >
                                 ✕
@@ -282,7 +329,11 @@ const Users = () => {
                         </button>
                     </div>
                 ) : filteredUsers.length === 0 ? (
-                    <p className="p-6 text-sm text-[#8C8272] dark:text-[#A69C8C]">No users found.</p>
+                    <p className="p-6 text-sm text-[#8C8272] dark:text-[#A69C8C]">
+                        {search
+                            ? `No users found matching "${search}".`
+                            : "No users found."}
+                    </p>
                 ) : (
                     <>
                         {/* Fixed header table */}
@@ -293,7 +344,29 @@ const Users = () => {
                                     <th className="px-4 py-3 font-medium w-[26%]">Email</th>
                                     <th className="px-4 py-3 font-medium w-[15%]">Signed With</th>
                                     <th className="px-4 py-3 font-medium w-[14%]">Verified</th>
-                                    <th className="px-4 py-3 font-medium w-[25%]">Last Visited</th>
+                                    <th className="px-4 py-3 font-medium w-[25%]">
+                                        <button
+                                            onClick={() =>
+                                                setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+                                            }
+                                            className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                                        >
+                                            Last Visited
+                                            <svg
+                                                className="w-3 h-3"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2.5"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                {sortOrder === "asc" ? (
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                                                ) : (
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                                )}
+                                            </svg>
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                         </table>

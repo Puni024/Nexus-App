@@ -70,7 +70,7 @@ const Overview = () => {
     const verifyUser = async (id: string) => {
     try {
         setUpdatingId(id);
-        await api.patch(`/admin/${id}/verify`);
+        await api.patch(`/admin/user/${id}/verify`);
         setUsers((prev) =>
             prev.map((u) => (u.id === id ? { ...u, isVerified: true } : u))
         );

@@ -72,6 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
     } catch {
       setUser(null);
+      if(window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
+
     } finally {
       setLoading(false);
     }

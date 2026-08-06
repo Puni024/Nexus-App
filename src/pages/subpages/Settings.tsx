@@ -43,7 +43,9 @@ function Settings() {
     const [savingName, setSavingName] = useState(false);
 
     const handleSaveName = async () => {
-        if (!name.trim()) return;
+        console.log(name.trim() , user?.name);
+        
+        if (!name.trim() || name.trim() === user?.name) return;
         setSavingName(true);
         try {
             const { data } = await api.patch("/auth/user/updateprofile", { name: name.trim() });
@@ -195,7 +197,7 @@ function Settings() {
                             <button
                                 onClick={() => handleUpdateTheme("light")}
                                 disabled={savingTheme}
-                                className={`flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold transition disabled:opacity-60 ${theme === "light"
+                                className={`flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold transition disabled:opacity-60 cursor-pointer ${theme === "light"
                                         ? "bg-[#2B2620] text-[#EDE6D6]"
                                         : "text-[var(--text-muted)] hover:text-[var(--text)]"
                                     }`}
@@ -210,7 +212,7 @@ function Settings() {
                             <button
                                 onClick={() => handleUpdateTheme("dark")}
                                 disabled={savingTheme}
-                                className={`flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold transition disabled:opacity-60 ${theme === "dark"
+                                className={`flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold transition disabled:opacity-60 cursor-pointer ${theme === "dark"
                                         ? "bg-[#2B2620] text-[#EDE6D6]"
                                         : "text-[var(--text-muted)] hover:text-[var(--text)]"
                                     }`}
@@ -239,7 +241,7 @@ function Settings() {
                                 <button
                                     onClick={handlePhotoClick}
                                     disabled={uploadingPhoto}
-                                    className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-[#2B2620] dark:bg-[#EDE6D6] border-2 border-[var(--card)] flex items-center justify-center text-[#EDE6D6] dark:text-[#2B2620] disabled:opacity-50"
+                                    className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-[#2B2620] dark:bg-[#EDE6D6] border-2 border-[var(--card)] flex items-center justify-center text-[#EDE6D6] dark:text-[#2B2620] disabled:opacity-50 cursor-pointer"
                                 >
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828H9V13z" />
@@ -277,7 +279,7 @@ function Settings() {
                                         <button
                                             onClick={handleSaveName}
                                             disabled={savingName}
-                                            className="h-9 px-3 rounded-lg bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] text-xs font-semibold disabled:opacity-50"
+                                            className="h-9 px-3 rounded-lg bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] text-xs font-semibold disabled:opacity-50 cursor-pointer transition-colors"
                                         >
                                             Save
                                         </button>
@@ -286,7 +288,7 @@ function Settings() {
                                                 setName(user?.name ?? "");
                                                 setEditingName(false);
                                             }}
-                                            className="h-9 px-3 rounded-lg border border-[var(--border)] text-xs font-semibold text-[var(--text-muted)]"
+                                            className="h-9 px-3 rounded-lg border border-[var(--border)] text-xs font-semibold text-[var(--text-muted)] hover:bg-[var(--bg)] cursor-pointer transition-colors"
                                         >
                                             Cancel
                                         </button>
@@ -296,7 +298,7 @@ function Settings() {
                                         <span className="flex-1 text-sm text-[var(--text)]">{user?.name}</span>
                                         <button
                                             onClick={() => setEditingName(true)}
-                                            className="text-[11px] font-semibold text-[#B98B4E] hover:underline"
+                                            className="text-[11px] font-semibold text-[#B98B4E] hover:underline cursor-pointer"
                                         >
                                             Edit
                                         </button>
@@ -340,7 +342,7 @@ function Settings() {
                                 {!showPasswordForm ? (
                                     <button
                                         onClick={() => setShowPasswordForm(true)}
-                                        className="text-[11px] font-semibold text-[#B98B4E] hover:underline"
+                                        className="text-[11px] font-semibold text-[#B98B4E] hover:underline cursor-pointer"
                                     >
                                         Change password
                                     </button>
@@ -367,7 +369,7 @@ function Settings() {
                                             <button
                                                 onClick={handleChangePassword}
                                                 disabled={savingPassword}
-                                                className="h-9 px-3 rounded-lg bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] text-xs font-semibold disabled:opacity-50"
+                                                className="h-9 px-3 rounded-lg bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] text-xs font-semibold disabled:opacity-50 cursor-pointer transition-colors"
                                             >
                                                 Update password
                                             </button>
@@ -378,7 +380,7 @@ function Settings() {
                                                     setNewPassword("");
                                                     setConfirmPassword("");
                                                 }}
-                                                className="h-9 px-3 rounded-lg border border-[var(--border)] text-xs font-semibold text-[var(--text-muted)]"
+                                                className="h-9 px-3 rounded-lg border border-[var(--border)] text-xs font-semibold text-[var(--text-muted)] hover:bg-[var(--bg)] cursor-pointer transition-colors"
                                             >
                                                 Cancel
                                             </button>
