@@ -63,9 +63,9 @@ function getFileExtension(name?: string): string {
 const FILE_TYPE_STYLES: Record<string, string> = {
     pdf: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
     doc: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+  
     docx: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
 };
-const DEFAULT_FILE_TYPE_STYLE = "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
 
 const AVATAR_COLORS = ["#B98B4E", "#6B8F71", "#7C83FD", "#E07A5F", "#3D8BFD", "#C9184A", "#8A5CF6"];
 

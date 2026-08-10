@@ -109,8 +109,6 @@ const Contribution = () => {
     const [selected, setSelected] = useState<Submission | null>(null);
     // Drives the shared FilePreviewModal - same one used on AllFiles / Newsletter pages
     const [previewFile, setPreviewFile] = useState<PreviewableFile | null>(null);
-    // Row-level download busy state, kept separate from the modal's own download button
-    const [downloading, setDownloading] = useState(false);
 
     const fetchSubmissions = async () => {
         try {
@@ -186,28 +184,7 @@ const Contribution = () => {
         });
     };
 
-    // Goes through the backend proxy stream endpoint (same one FilePreviewModal uses),
-    // rather than fetching Cloudinary directly from the browser.
-    const handleDownload = async () => {
-        if (!currentFile) return;
-        try {
-            setDownloading(true);
-            const res = await api.get(`/auth/files/${currentFile.file_id}/stream`, { responseType: "blob" });
-            const objectUrl = URL.createObjectURL(res.data);
-            const link = document.createElement("a");
-            link.href = objectUrl;
-            link.download = currentFile.file_name || "file";
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(objectUrl);
-        } catch {
-            window.open(currentFile.file_url, "_blank", "noreferrer");
-        } finally {
-            setDownloading(false);
-        }
-    };
-
+    
     const isPublished = !!selected?.is_published;
     const hasReview = !!selected?.approved_by;
 
