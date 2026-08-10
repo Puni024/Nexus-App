@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { NavIcon } from "./NavIcon";
 import { useAuth } from "../context/AuthContext";
@@ -19,6 +19,7 @@ const sidebarThemes: Record<Role, { bg: string; accent: string; accentText: stri
 
 export function Sidebar({ role, section, mobileNavOpen, setMobileNavOpen }: SidebarProps) {
     const { logout, user } = useAuth();
+    const navigate = useNavigate();
     const location = useLocation();
     const theme = sidebarThemes[role];
 
@@ -55,7 +56,7 @@ export function Sidebar({ role, section, mobileNavOpen, setMobileNavOpen }: Side
                 className="hidden md:flex md:w-[194px] flex-col text-[#EDE6D6] shrink-0"
                 style={{ backgroundColor: theme.bg }}
             >
-                <div className="px-[18px] py-[18px] flex items-center gap-2 border-b border-white/10">
+                <div className="px-[18px] py-[18px] flex items-center gap-2 border-b border-white/10 cursor-pointer" onClick={() => navigate(`/`)}>
                     <div
                         className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                         style={{ backgroundColor: theme.accent }}

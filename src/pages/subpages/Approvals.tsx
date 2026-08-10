@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import FilePreviewModal, { type PreviewableFile } from "../../components/FilePreviewModal";
 import api from "../../utils/api";
 
 interface NewsletterFile {
@@ -56,8 +57,6 @@ function getFileExtension(name?: string): string {
     const parts = name.split(".");
     return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
 }
-
-const OFFICE_VIEWABLE_EXTENSIONS = ["doc", "docx", "ppt", "pptx", "xls", "xlsx"];
 
 const FILE_TYPE_STYLES: Record<string, string> = {
     pdf: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
@@ -141,6 +140,7 @@ const Approvals = () => {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [tab, setTab] = useState<StatusTab>("PENDING");
     const [query, setQuery] = useState("");
+    const [previewFile, setPreviewFile] = useState<PreviewableFile | null>(null);
 
     const [selected, setSelected] = useState<Submission | null>(null);
     const [actionLoading, setActionLoading] = useState<"approve" | "reject" | "publish" | null>(null);
@@ -184,19 +184,6 @@ const Approvals = () => {
     const closeDetails = () => {
         setSelected(null);
         setActionError(null);
-    };
-
-    const currentFile = selected?.File;
-
-    const handleViewFile = () => {
-        if (!currentFile) return;
-        const ext = getFileExtension(currentFile.file_name);
-        if (OFFICE_VIEWABLE_EXTENSIONS.includes(ext)) {
-            const viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(currentFile.file_url)}`;
-            window.open(viewerUrl, "_blank", "noreferrer");
-            return;
-        }
-        window.open(currentFile.file_url, "_blank", "noreferrer");
     };
 
     const refreshAfterAction = async () => {
@@ -284,11 +271,10 @@ const Approvals = () => {
                     <button
                         key={t.key}
                         onClick={() => setTab(t.key)}
-                        className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-colors cursor-pointer ${
-                            tab === t.key
+                        className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-colors cursor-pointer ${tab === t.key
                                 ? "bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] border-[#2B2620] dark:border-[#EDE6D6]"
                                 : "bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:bg-[var(--bg)]"
-                        }`}
+                            }`}
                     >
                         {t.label}
                     </button>
@@ -427,11 +413,10 @@ const Approvals = () => {
                                     {statusLabels[selected.status]}
                                 </span>
                                 <span
-                                    className={`text-[11px] font-semibold px-3 py-1 rounded-full ${
-                                        selected.is_published
+                                    className={`text-[11px] font-semibold px-3 py-1 rounded-full ${selected.is_published
                                             ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                                             : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                                    }`}
+                                        }`}
                                 >
                                     {selected.is_published ? "Published" : "Not Published"}
                                 </span>
@@ -442,9 +427,8 @@ const Approvals = () => {
                                 <div className="flex items-center justify-between gap-3 border border-[var(--border)] rounded-xl px-4 py-3">
                                     <div className="flex items-center gap-3 min-w-0">
                                         <span
-                                            className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-md uppercase ${
-                                                FILE_TYPE_STYLES[getFileExtension(selected.File.file_name)] || DEFAULT_FILE_TYPE_STYLE
-                                            }`}
+                                            className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-md uppercase ${FILE_TYPE_STYLES[getFileExtension(selected.File.file_name)] || DEFAULT_FILE_TYPE_STYLE
+                                                }`}
                                         >
                                             {getFileExtension(selected.File.file_name) || "file"}
                                         </span>
@@ -453,7 +437,14 @@ const Approvals = () => {
                                         </p>
                                     </div>
                                     <button
-                                        onClick={handleViewFile}
+                                        onClick={() =>
+                                            selected.File &&
+                                            setPreviewFile({
+                                                file_id: selected.File.file_id,
+                                                file_name: selected.File.file_name,
+                                                file_url: selected.File.file_url,
+                                            })
+                                        }
                                         className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text)] hover:bg-[var(--bg)] transition-colors cursor-pointer shrink-0"
                                     >
                                         View
@@ -509,8 +500,8 @@ const Approvals = () => {
                                         {actionLoading === "publish"
                                             ? "Updating..."
                                             : selected.is_published
-                                            ? "Unpublish"
-                                            : "Publish"}
+                                                ? "Unpublish"
+                                                : "Publish"}
                                     </button>
                                 )}
 
@@ -524,6 +515,7 @@ const Approvals = () => {
                     </div>
                 </div>
             )}
+            <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
         </div>
     );
 };

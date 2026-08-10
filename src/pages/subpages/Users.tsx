@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
 import api from "../../utils/api";
 import Loader from "../../components/Loader";
 
@@ -42,8 +41,6 @@ function formatLastVisited(lastVisited: string | null | undefined): string {
 }
 
 const Users = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
-
     const [users, setUsers] = useState<UserRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -52,9 +49,7 @@ const Users = () => {
     const [signedFilter, setSignedFilter] = useState<SignedFilter>(null);
     const [verifiedFilter, setVerifiedFilter] = useState<VerifiedFilter>(null);
 
-    // Initialize search straight from the URL, so a deep-link like
-    // /admin/users?search=John lands already filtered.
-    const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
+    const [search, setSearch] = useState("");
 
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
@@ -74,33 +69,6 @@ const Users = () => {
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers]);
-
-    // Keep local `search` state in sync if the URL changes from OUTSIDE this
-    // component - e.g. clicking a profile card elsewhere navigates here with
-    // a new ?search= value while Users is already mounted (no remount).
-    useEffect(() => {
-        const urlSearch = searchParams.get("search") ?? "";
-        setSearch((prev) => (prev === urlSearch ? prev : urlSearch));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams]);
-
-    // Mirror local `search` back into the URL as the user types, so the URL
-    // is always shareable/refreshable and stays the single source of truth.
-    useEffect(() => {
-        setSearchParams(
-            (prev) => {
-                const next = new URLSearchParams(prev);
-                if (search.trim()) {
-                    next.set("search", search);
-                } else {
-                    next.delete("search");
-                }
-                return next;
-            },
-            { replace: true }
-        );
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search]);
 
     const filteredUsers = useMemo(() => {
         const result = users.filter((u) => {
@@ -186,7 +154,7 @@ const Users = () => {
     }
 
     return (
-        <div className="p-4 md:p-6 space-y-5">
+        <div className="p-4 md:p-6 space-y-5 bg-[var(--bg)]">
 
             {/* Filters */}
             <div className="flex flex-col md:flex-row bg-[#F5EFE4] dark:bg-[#2B2620] border border-[#D8CDB8] dark:border-[#3A332B] rounded-lg overflow-hidden transition-colors">
@@ -272,7 +240,7 @@ const Users = () => {
                         {search && (
                             <button
                                 onClick={() => setSearch("")}
-                                className="text-[#8C8272] ml-2 dark:text-[#A69C8C] hover:text-[#2B2620] dark:hover:text-[#EDE6D6] shrink-0 cursor-pointer transition-colors"
+                                className="text-[#8C8272] dark:text-[#A69C8C] hover:text-[#2B2620] dark:hover:text-[#EDE6D6] shrink-0"
                                 aria-label="Clear search"
                             >
                                 ✕
@@ -329,11 +297,7 @@ const Users = () => {
                         </button>
                     </div>
                 ) : filteredUsers.length === 0 ? (
-                    <p className="p-6 text-sm text-[#8C8272] dark:text-[#A69C8C]">
-                        {search
-                            ? `No users found matching "${search}".`
-                            : "No users found."}
-                    </p>
+                    <p className="p-6 text-sm text-[#8C8272] dark:text-[#A69C8C]">No users found.</p>
                 ) : (
                     <>
                         {/* Fixed header table */}

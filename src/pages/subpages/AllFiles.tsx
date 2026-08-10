@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../utils/api";
+import FilePreviewModal, { type PreviewableFile } from "../../components/FilePreviewModal";
 
 interface FileRecord {
     file_id: number;
     file_name: string;
     file_url: string;
 }
-
 
 const FILE_TYPE_STYLES: Record<string, string> = {
     pdf: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
@@ -15,12 +15,19 @@ const FILE_TYPE_STYLES: Record<string, string> = {
 };
 const DEFAULT_FILE_TYPE_STYLE = "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
 
+function getFileExtension(name?: string): string {
+    if (!name) return "";
+    const parts = name.split(".");
+    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
+}
+
 const AllFiles = () => {
     const [files, setFiles] = useState<FileRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [query, setQuery] = useState("");
-    const [busyId, setBusyId] = useState<number | null>(null); // which row is downloading
+    const [busyId, setBusyId] = useState<number | null>(null);
+    const [previewFile, setPreviewFile] = useState<PreviewableFile | null>(null);
 
     const fetchFiles = async () => {
         try {
@@ -45,37 +52,18 @@ const AllFiles = () => {
         return files.filter((f) => f.file_name?.toLowerCase().includes(q));
     }, [files, query]);
 
-    function getFileExtension(name?: string): string {
-    if (!name) return "";
-    const parts = name.split(".");
-    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
-}
+    // Opens the shared popup instead of a new tab
+    const handleView = (file: FileRecord) => {
+        setPreviewFile(file);
+    };
 
-const OFFICE_VIEWABLE_EXTENSIONS = ["doc", "docx", "ppt", "pptx", "xls", "xlsx"];
-
-const handleView = (file: FileRecord) => {
-    const ext = getFileExtension(file.file_name);
-
-    if (OFFICE_VIEWABLE_EXTENSIONS.includes(ext)) {
-        // Office Online viewer needs a publicly reachable, URL-encoded source link
-        const viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
-            file.file_url
-        )}`;
-        window.open(viewerUrl, "_blank", "noreferrer");
-        return;
-    }
-
-    // PDFs (and other browser-renderable types) can open directly
-    window.open(file.file_url, "_blank", "noreferrer");
-};
-
+    // Same proxy stream endpoint powers the row-level download too,
+    // so it works consistently regardless of Cloudinary CORS behavior.
     const handleDownload = async (file: FileRecord) => {
         try {
             setBusyId(file.file_id);
-            const res = await fetch(file.file_url);
-            if (!res.ok) throw new Error("Fetch failed");
-            const blob = await res.blob();
-            const objectUrl = URL.createObjectURL(blob);
+            const res = await api.get(`/auth/files/${file.file_id}/stream`, { responseType: "blob" });
+            const objectUrl = URL.createObjectURL(res.data);
             const link = document.createElement("a");
             link.href = objectUrl;
             link.download = file.file_name || "file";
@@ -104,7 +92,6 @@ const handleView = (file: FileRecord) => {
                     </p>
                 </div>
 
-                {/* Search - pill style, distinct from the Contribution page's inputs */}
                 <div className="relative w-full max-w-xs shrink-0">
                     <svg
                         className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none"
@@ -235,6 +222,8 @@ const handleView = (file: FileRecord) => {
                     </div>
                 </div>
             </div>
+
+            <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
         </div>
     );
 };

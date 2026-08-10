@@ -6,7 +6,6 @@ export const adminRoutes: AppRoute[] = [
     { path: "all-files", component: "AllFiles", label: "All Files", icon: "folder", roles: ["admin"] },
     { path: "newsletterhub", component: "Newsletter_Hub", label: "Newsletter Hub", icon: "newsletter", roles: ["admin"] },
     { path: "users", component: "Users", label: "Users", icon: "users", roles: ["admin"] },
-    { path: "publish", component: "Publish", label: "Publish", icon: "publish", roles: ["admin"] },
     { path: "approvals", component: "Approvals", label: "Approvals", icon: "approval", roles: ["admin"] },
     { path: "settings", component: "Settings", label: "Settings", icon: "gear", roles: ["admin"] },
 ];

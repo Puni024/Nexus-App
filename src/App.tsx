@@ -16,7 +16,6 @@ import Contribution from "./pages/subpages/Contribution";
 import Approvals from "./pages/subpages/Approvals";
 import Newsletter_Hub from "./pages/subpages/Newsletter_Hub";
 import People from "./pages/subpages/People";
-import Publish from "./pages/subpages/Publish";
 import AllFiles from "./pages/subpages/AllFiles";
 
 import Loader from "./components/Loader";
@@ -31,7 +30,6 @@ import type { AppRoute, Section } from "./Types/Filtes";
 
 const pageComponents = {
   AllFiles,
-  Publish,
   People,
   Newsletter_Hub,
   Approvals,

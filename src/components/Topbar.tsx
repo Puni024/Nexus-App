@@ -80,7 +80,7 @@ export function Topbar({ section, setMobileNavOpen }: TopbarProps) {
                 <div className="relative" ref={profileRef}>
                     <button
                         onClick={() => setProfileOpen((v) => !v)}
-                        className="w-7 h-7 rounded-full bg-[#B98B4E] flex items-center justify-center text-[#2B2620] font-semibold text-xs overflow-hidden"
+                        className="w-7 h-7 rounded-full bg-[#B98B4E] flex items-center justify-center text-[#2B2620] font-semibold text-xs overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#B98B4E] transition-all"
                     >
                         {user?.info.picture ? (
                             <img src={user.info.picture} referrerPolicy="no-referrer" alt={user.name} className="w-full h-full object-cover" />
@@ -107,14 +107,14 @@ export function Topbar({ section, setMobileNavOpen }: TopbarProps) {
 
                             <button
                                 onClick={goToSettings}
-                                className="w-full text-left px-3.5 py-2.5 text-xs font-medium text-[var(--text)] hover:bg-[var(--bg)] transition-colors"
+                                className="w-full text-left px-3.5 py-2.5 text-xs font-medium text-[var(--text)] hover:bg-[var(--bg)] transition-colors cursor-pointer "
                             >
                                 Account settings
                             </button>
 
                             <button
                                 onClick={handleLogout}
-                                className="w-full text-left px-3.5 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors border-t border-[var(--border)]"
+                                className="w-full text-left px-3.5 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors border-t border-[var(--border)] cursor-pointer"
                             >
                                 Log out
                             </button>

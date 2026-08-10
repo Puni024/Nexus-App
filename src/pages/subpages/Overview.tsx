@@ -171,7 +171,7 @@ const Overview = () => {
     }
 
     return (
-        <div className="p-4 md:p-6 space-y-4">
+        <div className="p-4 md:p-6 space-y-4 bg-[var(--bg)]">
 
             {/* KPI Row: 3 cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
