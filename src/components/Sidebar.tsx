@@ -25,6 +25,8 @@ export function Sidebar({ role, section, mobileNavOpen, setMobileNavOpen }: Side
 
     const navItems = user ? getRoutesForSection(section, user.role) : [];
 
+    const defaultnav =() => { navigate(`/`) }
+
     const renderNavLink = (item: ReturnType<typeof getRoutesForSection>[number], onClick?: () => void) => {
         const to = `/${section}/${item.path}`;
         const isActive = location.pathname === to;
@@ -56,16 +58,17 @@ export function Sidebar({ role, section, mobileNavOpen, setMobileNavOpen }: Side
                 className="hidden md:flex md:w-[194px] flex-col text-[#EDE6D6] shrink-0"
                 style={{ backgroundColor: theme.bg }}
             >
-                <div className="px-[18px] py-[18px] flex items-center gap-2 border-b border-white/10 cursor-pointer" onClick={() => navigate(`/`)}>
+                <div className="px-[18px] py-[18px] flex items-center gap-2 border-b border-white/10 ">
                     <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 cursor-pointer"
                         style={{ backgroundColor: theme.accent }}
+                        onClick={() => {defaultnav()}}
                     >
                         <svg className="w-3.5 h-3.5 text-[#2B2620]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 2L3 14h7l-1 8 11-14h-7l1-6z" />
                         </svg>
                     </div>
-                    <span className="font-serif text-sm tracking-wide">{theme.label}</span>
+                    <span className="font-serif text-sm tracking-wide cursor-pointer" onClick={() => {defaultnav()}}>{theme.label}</span>
                 </div>
 
                 <nav className="flex-1 px-2 py-[18px] space-y-1">

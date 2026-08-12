@@ -33,7 +33,7 @@ interface Submission {
     File?: NewsletterFile;
 }
 
-type StatusTab = "PENDING" | "APPROVED" | "REJECTED" | "ALL";
+type StatusTab = "ALL" | "PENDING" | "APPROVED" | "REJECTED";
 
 function formatDate(dateStr: string): string {
     const date = new Date(dateStr);
@@ -128,17 +128,17 @@ function Avatar({ name, profile, size = 36 }: { name?: string; profile?: string 
 }
 
 const TABS: { key: StatusTab; label: string }[] = [
-    { key: "PENDING", label: "Pending" },
-    { key: "APPROVED", label: "Approved" },
-    { key: "REJECTED", label: "Rejected" },
     { key: "ALL", label: "All" },
+    { key: "APPROVED", label: "Approved" },
+    { key: "PENDING", label: "Pending" },
+    { key: "REJECTED", label: "Rejected" },
 ];
 
 const Approvals = () => {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [tab, setTab] = useState<StatusTab>("PENDING");
+    const [tab, setTab] = useState<StatusTab>("ALL");
     const [query, setQuery] = useState("");
     const [previewFile, setPreviewFile] = useState<PreviewableFile | null>(null);
 

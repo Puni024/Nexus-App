@@ -3,34 +3,7 @@ import { useRef, useState } from "react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 import type { Theme } from "../../Types/Filtes";
-
-function Avatar({
-    picture,
-    name,
-    className,
-    textClassName,
-}: {
-    picture?: string;
-    name?: string;
-    className?: string;
-    textClassName?: string;
-}) {
-    const [failed, setFailed] = useState(false);
-
-    if (picture && !failed) {
-        return (
-            <img
-                src={picture}
-                alt={name}
-                referrerPolicy="no-referrer"
-                onError={() => setFailed(true)}
-                className={`w-full h-full object-cover ${className ?? ""}`}
-            />
-        );
-    }
-
-    return <span className={textClassName}>{name?.charAt(0).toUpperCase()}</span>;
-}
+import { UserAvatar } from "../../components/UserAvatar";
 
 function Settings() {
 
@@ -43,8 +16,6 @@ function Settings() {
     const [savingName, setSavingName] = useState(false);
 
     const handleSaveName = async () => {
-        console.log(name.trim() , user?.name);
-        
         if (!name.trim() || name.trim() === user?.name) return;
         setSavingName(true);
         try {
@@ -103,7 +74,7 @@ function Settings() {
         e.target.value = ""; // allow re-selecting same file later
     };
 
-    // ---------------- THEME (reads directly from context, no local duplicate state) ----------------
+    // ---------------- THEME ----------------
 
     const [savingTheme, setSavingTheme] = useState(false);
 
@@ -111,10 +82,9 @@ function Settings() {
         if (mode === theme) return;
 
         const prev = theme;
-        updateUser({ info: { Theme: mode } }); // optimistic - context.theme updates immediately
+        updateUser({ info: { Theme: mode } });
         setSavingTheme(true);
         try {
-            // NOTE: key must be lowercase "theme" to match backend's req.body destructuring
             await api.patch("/auth/user/updateprofile", { Theme: mode });
         } catch {
             updateUser({ info: { Theme: prev } });
@@ -183,7 +153,7 @@ function Settings() {
         <div className="w-full min-h-full bg-[var(--bg)] px-4 sm:px-8 py-6 sm:py-8 transition-colors">
             <div className="w-full max-w-5xl mx-auto space-y-6">
 
-                {/* THEME - single line, label left, toggle right */}
+                {/* THEME */}
                 <section className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-5 transition-colors">
                     <div className="flex items-center justify-between gap-4">
                         <div>
@@ -198,8 +168,8 @@ function Settings() {
                                 onClick={() => handleUpdateTheme("light")}
                                 disabled={savingTheme}
                                 className={`flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold transition disabled:opacity-60 cursor-pointer ${theme === "light"
-                                        ? "bg-[#2B2620] text-[#EDE6D6]"
-                                        : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                                    ? "bg-[#2B2620] text-[#EDE6D6]"
+                                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
                                     }`}
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -213,8 +183,8 @@ function Settings() {
                                 onClick={() => handleUpdateTheme("dark")}
                                 disabled={savingTheme}
                                 className={`flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold transition disabled:opacity-60 cursor-pointer ${theme === "dark"
-                                        ? "bg-[#2B2620] text-[#EDE6D6]"
-                                        : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                                    ? "bg-[#2B2620] text-[#EDE6D6]"
+                                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
                                     }`}
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -234,8 +204,12 @@ function Settings() {
                         {/* Profile photo */}
                         <div className="flex items-center gap-4">
                             <div className="relative shrink-0">
-                                <div className="w-16 h-16 rounded-full bg-[#B98B4E] flex items-center justify-center text-[#2B2620] font-semibold text-lg overflow-hidden">
-                                    <Avatar picture={user?.info.picture} name={user?.name} />
+                                <div className="w-16 h-16 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-[#2B2620] font-semibold text-lg overflow-hidden">
+                                    <UserAvatar
+                                        profile={user?.info.picture}
+                                        name={user?.name}
+                                        textClassName="text-lg font-semibold text-[#2B2620] dark:text-[#EDE6D6]"
+                                    />
                                 </div>
 
                                 <button
@@ -319,8 +293,8 @@ function Settings() {
                             <p className="mt-1">
                                 <span
                                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${user?.isVerified
-                                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                            : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                        : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
                                         }`}
                                 >
                                     {user?.isVerified ? "Verified" : "Pending Verification"}
@@ -336,7 +310,7 @@ function Settings() {
                             </p>
                         </div>
 
-                        {/* Change password - only for local accounts, no old password required */}
+                        {/* Change password - only for local accounts */}
                         {isLocal && (
                             <div className="pt-2 border-t border-[var(--border)]">
                                 {!showPasswordForm ? (

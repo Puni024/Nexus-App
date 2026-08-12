@@ -308,7 +308,7 @@ function Login() {
 
                             <button
                                 type="submit"
-                                className="w-full h-[29px] sm:h-9 rounded-xl bg-[#2B2620] text-[#EDE6D6] font-semibold text-xs hover:scale-[1.02] transition-all duration-300 shadow-lg"
+                                className="w-full h-[29px] sm:h-9 rounded-xl bg-[#2B2620] text-[#EDE6D6] font-semibold text-xs hover:scale-[1.02] transition-all duration-300 shadow-lg cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Sign In
                             </button>

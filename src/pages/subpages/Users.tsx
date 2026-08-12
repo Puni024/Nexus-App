@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../utils/api";
 import Loader from "../../components/Loader";
 
@@ -40,18 +41,101 @@ function formatLastVisited(lastVisited: string | null | undefined): string {
     });
 }
 
+// ---------- URL <-> state helpers ----------
+const isSignedFilter = (v: string | null): v is Exclude<SignedFilter, null> =>
+    v === "google" || v === "email";
+
+const isVerifiedFilter = (v: string | null): v is Exclude<VerifiedFilter, null> =>
+    v === "verified" || v === "unverified";
+
+const isSortOrder = (v: string | null): v is SortOrder => v === "asc" || v === "desc";
+
 const Users = () => {
     const [users, setUsers] = useState<UserRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [onlyActive, setOnlyActive] = useState(false);
-    const [signedFilter, setSignedFilter] = useState<SignedFilter>(null);
-    const [verifiedFilter, setVerifiedFilter] = useState<VerifiedFilter>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    const [search, setSearch] = useState("");
+    // ---------- Derive filter state from URL on every render ----------
+    const onlyActive = searchParams.get("active") === "1";
+    const signedFilter: SignedFilter = isSignedFilter(searchParams.get("signed"))
+        ? (searchParams.get("signed") as SignedFilter)
+        : null;
+    const verifiedFilter: VerifiedFilter = isVerifiedFilter(searchParams.get("verified"))
+        ? (searchParams.get("verified") as VerifiedFilter)
+        : null;
+    const search = searchParams.get("search") ?? "";
+    const sortOrder: SortOrder = isSortOrder(searchParams.get("sort"))
+        ? (searchParams.get("sort") as SortOrder)
+        : "desc";
 
-    const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+    // Local mirror of the search box so typing feels instant; URL updates are debounced.
+    const [searchInput, setSearchInput] = useState(search);
+
+    // Keep the input in sync if the URL changes from elsewhere (back/forward nav, clear, etc.)
+    useEffect(() => {
+        setSearchInput(search);
+    }, [search]);
+
+    // Debounce writing the search box value into the URL/search params.
+    useEffect(() => {
+        const handle = setTimeout(() => {
+            if (searchInput === search) return;
+
+            setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                if (searchInput.trim()) {
+                    next.set("search", searchInput);
+                } else {
+                    next.delete("search");
+                }
+                return next;
+            }, { replace: true });
+        }, 300);
+
+        return () => clearTimeout(handle);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchInput]);
+
+    // ---------- Generic setter that patches a single param in the URL ----------
+    const setParam = useCallback(
+        (key: string, value: string | null) => {
+            setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                if (value === null || value === "") {
+                    next.delete(key);
+                } else {
+                    next.set(key, value);
+                }
+                return next;
+            }, { replace: true });
+        },
+        [setSearchParams]
+    );
+
+    const toggleOnlyActive = useCallback(() => {
+        setParam("active", onlyActive ? null : "1");
+    }, [onlyActive, setParam]);
+
+    const setSignedFilterParam = useCallback(
+        (v: SignedFilter) => setParam("signed", v),
+        [setParam]
+    );
+
+    const setVerifiedFilterParam = useCallback(
+        (v: VerifiedFilter) => setParam("verified", v),
+        [setParam]
+    );
+
+    const toggleSortOrder = useCallback(() => {
+        setParam("sort", sortOrder === "asc" ? "desc" : "asc");
+    }, [sortOrder, setParam]);
+
+    const clearSearch = useCallback(() => {
+        setSearchInput("");
+        setParam("search", null);
+    }, [setParam]);
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -85,8 +169,8 @@ const Users = () => {
             if (search.trim()) {
                 const q = search.trim().toLowerCase();
                 const matches =
-                    u.name?.toLowerCase().includes(q) ||
-                    u.email?.toLowerCase().includes(q);
+                    u.name?.trim().toLowerCase().includes(q) ||
+                    u.email?.trim().toLowerCase().includes(q);
                 if (!matches) return false;
             }
 
@@ -132,11 +216,10 @@ const Users = () => {
                             onClick={() =>
                                 onSelect(isActive ? null : chip.value)
                             }
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors
-                                ${
-                                    isActive
-                                        ? "bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] border-[#2B2620] dark:border-[#EDE6D6]"
-                                        : "bg-[#F5EFE4] dark:bg-[#211D18] text-[#2B2620] dark:text-[#EDE6D6] border-[#D8CDB8] dark:border-[#3A332B] hover:bg-[#EDE6D6] dark:hover:bg-[#2B2620]"
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer
+                                ${isActive
+                                    ? "bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] border-[#2B2620] dark:border-[#EDE6D6]"
+                                    : "bg-[#F5EFE4] dark:bg-[#211D18] text-[#2B2620] dark:text-[#EDE6D6] border-[#D8CDB8] dark:border-[#3A332B] hover:bg-[#EDE6D6] dark:hover:bg-[#2B2620]"
                                 }`}
                         >
                             {chip.label}
@@ -167,12 +250,11 @@ const Users = () => {
                             Activity
                         </p>
                         <button
-                            onClick={() => setOnlyActive((prev) => !prev)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors
-                                ${
-                                    onlyActive
-                                        ? "bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] border-[#2B2620] dark:border-[#EDE6D6]"
-                                        : "bg-[#F5EFE4] dark:bg-[#211D18] text-[#2B2620] dark:text-[#EDE6D6] border-[#D8CDB8] dark:border-[#3A332B] hover:bg-[#EDE6D6] dark:hover:bg-[#2B2620]"
+                            onClick={toggleOnlyActive}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer
+                                ${onlyActive
+                                    ? "bg-[#2B2620] dark:bg-[#EDE6D6] text-[#EDE6D6] dark:text-[#2B2620] border-[#2B2620] dark:border-[#EDE6D6]"
+                                    : "bg-[#F5EFE4] dark:bg-[#211D18] text-[#2B2620] dark:text-[#EDE6D6] border-[#D8CDB8] dark:border-[#3A332B] hover:bg-[#EDE6D6] dark:hover:bg-[#2B2620]"
                                 }`}
                         >
                             Active in last 5h
@@ -195,7 +277,7 @@ const Users = () => {
                                 { label: "Email", value: "email" },
                             ]}
                             selected={signedFilter}
-                            onSelect={setSignedFilter}
+                            onSelect={setSignedFilterParam}
                         />
                     </div>
 
@@ -209,7 +291,7 @@ const Users = () => {
                                 { label: "Not Verified", value: "unverified" },
                             ]}
                             selected={verifiedFilter}
-                            onSelect={setVerifiedFilter}
+                            onSelect={setVerifiedFilterParam}
                         />
                     </div>
 
@@ -231,15 +313,15 @@ const Users = () => {
 
                         <input
                             type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
                             placeholder="Search"
                             className="ml-2 w-full bg-transparent outline-none text-sm text-[#2B2620] dark:text-[#EDE6D6] placeholder:text-[#8C8272] dark:placeholder:text-[#A69C8C]"
                         />
 
-                        {search && (
+                        {searchInput && (
                             <button
-                                onClick={() => setSearch("")}
+                                onClick={clearSearch}
                                 className="text-[#8C8272] dark:text-[#A69C8C] hover:text-[#2B2620] dark:hover:text-[#EDE6D6] shrink-0"
                                 aria-label="Clear search"
                             >
@@ -310,14 +392,12 @@ const Users = () => {
                                     <th className="px-4 py-3 font-medium w-[14%]">Verified</th>
                                     <th className="px-4 py-3 font-medium w-[25%]">
                                         <button
-                                            onClick={() =>
-                                                setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
-                                            }
+                                            onClick={toggleSortOrder}
                                             className="flex items-center gap-1 hover:opacity-80 transition-opacity"
                                         >
                                             Last Visited
                                             <svg
-                                                className="w-3 h-3"
+                                                className="w-3 h-3 cursor-pointer"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 strokeWidth="2.5"
@@ -354,11 +434,10 @@ const Users = () => {
                                                 </td>
                                                 <td className="px-4 py-3 w-[14%]">
                                                     <span
-                                                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                                            u.isVerified
+                                                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.isVerified
                                                                 ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                                                                 : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {u.isVerified ? "Verified" : "Not Verified"}
                                                     </span>
@@ -366,9 +445,8 @@ const Users = () => {
                                                 <td className="px-4 py-3 w-[25%]">
                                                     <span className="inline-flex items-center gap-1.5">
                                                         <span
-                                                            className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-                                                                active ? "bg-green-500" : "bg-[#8C8272] dark:bg-[#A69C8C]"
-                                                            }`}
+                                                            className={`inline-block w-2 h-2 rounded-full shrink-0 ${active ? "bg-green-500" : "bg-[#8C8272] dark:bg-[#A69C8C]"
+                                                                }`}
                                                         />
                                                         <span className="text-[#2B2620] dark:text-[#EDE6D6]">
                                                             {formatLastVisited(u.last_visited)}
