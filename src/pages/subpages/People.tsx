@@ -167,7 +167,7 @@ function UserCard({ user }: { user: UserRecord }) {
     const navigate = useNavigate();
 
     const goToUserInTable = () => {
-        navigate(`/admin/users?search=${encodeURIComponent(user.email)}`);
+        navigate(`/admin/users?search=${encodeURIComponent(user.email)}&active=false`);
     };
 
     return (

@@ -7,8 +7,8 @@ export type Section = "admin" | "home";
 export type Provider = "local" | "google";
 
 export interface UserInfo {
-  Theme: Theme;     // always normalized to "light" | "dark" by AuthContext
-  picture: string;  // data URI / URL, empty string if none
+  Theme: Theme;
+  picture: string;
 }
 
 export interface User {
@@ -20,14 +20,6 @@ export interface User {
   provider?: Provider;
 }
 
-export interface AppRoute {
-  path: string;
-  component: string;
-  label: string;
-  icon: string;
-  roles: Role[];
-}
-
 export type ToastType = "success" | "error" | "info";
 
 export interface Toast {
@@ -35,12 +27,30 @@ export interface Toast {
   message: string;
   type: ToastType;
 }
+export interface AppNotification {
+  id: number;
+  userId: string;
+  type: string;
+  title: string;
+  message: string | null;
+  entityType: string | null;
+  entityId: string | null;
+  isRead: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
   theme: Theme;
+  unreadCount: number;
+  notifications: AppNotification[];
+  loadingList: boolean;
+  fetchNotifications: () => Promise<void>;
+  markAsRead: (id: number) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (patch: Partial<Pick<User, "name" | "isVerified">> & { info?: Partial<UserInfo> }) => void;

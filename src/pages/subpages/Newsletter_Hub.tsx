@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import FilePreviewModal, { type PreviewableFile } from "../../components/FilePreviewModal";
 import api from "../../utils/api";
 
@@ -22,7 +23,7 @@ interface ApprovedByUser {
 }
 
 interface Submission {
-    newsletter_id: number;
+    newsletter_id: string;
     title: string;
     file_id: number;
     submitted_by: string;
@@ -80,8 +81,6 @@ function getAvatarColor(seed?: string): string {
     return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-// picture can be "" (empty string, as your API sends for no-photo users),
-// null/undefined, a full data URI already, or a bare base64 string.
 function resolveProfileSrc(profile?: string | null): string | null {
     if (!profile) return null;
     const value = profile.trim();
@@ -119,13 +118,15 @@ function Avatar({ name, profile, size = 36 }: { name?: string; profile?: string 
 }
 
 const Newsletter_Hub = () => {
+    const location = useLocation();
+
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [query, setQuery] = useState("");
     const [previewFile, setPreviewFile] = useState<PreviewableFile | null>(null);
     const [selected, setSelected] = useState<Submission | null>(null);
-    const [publishingId, setPublishingId] = useState<number | null>(null);
+    const [publishingId, setPublishingId] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
 
     const fetchApproved = async () => {
@@ -145,7 +146,7 @@ const Newsletter_Hub = () => {
 
     useEffect(() => {
         fetchApproved();
-    }, []);
+    }, [location.state]);
 
     const { published, unpublished } = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -201,6 +202,18 @@ const Newsletter_Hub = () => {
         setSelected(null);
         setActionError(null);
     };
+
+    // Auto-open the submission a notification pointed at, once loaded.
+    useEffect(() => {
+        const highlightId = (location.state as any)?.highlightId;
+        if (!highlightId || submissions.length === 0) return;
+
+        const match = submissions.find((s) => String(s.newsletter_id) === String(highlightId));
+        if (match) {
+            openDetails(match);
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state, submissions]);
 
     function SubmissionRow({ s }: { s: Submission }) {
         const isBusy = publishingId === s.newsletter_id;

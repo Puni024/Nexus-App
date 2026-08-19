@@ -1,29 +1,32 @@
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 
 import {
   QueryClient,
   QueryClientProvider,
-} from '@tanstack/react-query'
+} from "@tanstack/react-query";
 
-import "./index.css";
-import App from "./App.tsx";
-import { GoogleOAuthProvider } from '@react-oauth/google'
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
+import { router } from "./routes";
 import { AuthProvider } from "./context/AuthContext.tsx";
 
+import "./index.css";
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
-createRoot(document.getElementById("root")!).render(
+createRoot(
+  document.getElementById("root")!
+).render(
   <QueryClientProvider client={queryClient}>
-    {/* <StrictMode> */}
-    <BrowserRouter>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </GoogleOAuthProvider>
-    </BrowserRouter>
-    {/* </StrictMode> */}
+    <GoogleOAuthProvider
+      clientId={
+        import.meta.env.VITE_GOOGLE_CLIENT_ID
+      }
+    >
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </GoogleOAuthProvider>
   </QueryClientProvider>
 );

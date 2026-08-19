@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import FilePreviewModal, { type PreviewableFile } from "../../components/FilePreviewModal";
 import api from "../../utils/api";
 
@@ -14,7 +15,7 @@ interface SubmissionUser {
 }
 
 interface Submission {
-    newsletter_id: number;
+    newsletter_id: string;
     title: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
     uploaded_at: string;
@@ -66,7 +67,6 @@ const statusLabels: Record<Submission["status"], string> = {
     REJECTED: "Rejected",
 };
 
-// Small deterministic set of colors for initials avatars, Zoho-style
 const AVATAR_COLORS = ["#B98B4E", "#6B8F71", "#7C83FD", "#E07A5F", "#3D8BFD", "#C9184A", "#8A5CF6"];
 
 function getInitials(name?: string): string {
@@ -95,6 +95,8 @@ function Avatar({ name }: { name?: string }) {
 }
 
 const Contribution = () => {
+    const location = useLocation();
+
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -105,9 +107,7 @@ const Contribution = () => {
     const [formError, setFormError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
-    // Details popup state
     const [selected, setSelected] = useState<Submission | null>(null);
-    // Drives the shared FilePreviewModal - same one used on AllFiles / Newsletter pages
     const [previewFile, setPreviewFile] = useState<PreviewableFile | null>(null);
 
     const fetchSubmissions = async () => {
@@ -125,7 +125,7 @@ const Contribution = () => {
 
     useEffect(() => {
         fetchSubmissions();
-    }, []);
+    }, [location.state]);
 
     const resetForm = () => {
         setTitle("");
@@ -174,7 +174,6 @@ const Contribution = () => {
         setSelected(null);
     };
 
-    // Opens the shared preview modal for the currently selected submission's file
     const handleViewFile = () => {
         if (!currentFile) return;
         setPreviewFile({
@@ -184,15 +183,24 @@ const Contribution = () => {
         });
     };
 
-    
+    // Auto-open the submission a notification pointed at, once loaded.
+    useEffect(() => {
+        const highlightId = (location.state as any)?.highlightId;
+        if (!highlightId || submissions.length === 0) return;
+
+        const match = submissions.find((s) => String(s.newsletter_id) === String(highlightId));
+        if (match) {
+            openDetails(match);
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state, submissions]);
+
     const isPublished = !!selected?.is_published;
     const hasReview = !!selected?.approved_by;
 
     return (
-        // Fills the content area that the app shell (sidebar + topbar) hands to the page.
         <div className="w-full h-full flex flex-col bg-[var(--bg)] transition-colors">
 
-            {/* Page header */}
             <div className="shrink-0 flex items-center justify-between gap-4 px-6 sm:px-10 py-5 border-b border-[var(--border)] bg-[var(--bg)]">
                 <div className="min-w-0">
                     <h1 className="text-xl sm:text-2xl font-bold text-[var(--text)] truncate">
@@ -214,7 +222,6 @@ const Contribution = () => {
                 </button>
             </div>
 
-            {/* Scrollable content area - full width */}
             <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6">
                 <div className="w-full space-y-5">
 
@@ -290,7 +297,6 @@ const Contribution = () => {
                 </div>
             </div>
 
-            {/* New Submission modal */}
             {showForm && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
@@ -380,7 +386,6 @@ const Contribution = () => {
                 </div>
             )}
 
-            {/* Details popup */}
             {selected && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
@@ -390,7 +395,6 @@ const Contribution = () => {
                         onClick={(e) => e.stopPropagation()}
                         className="w-full max-w-lg bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
                     >
-                        {/* Top bar */}
                         <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--border)] bg-[var(--card)]">
                             <p className="text-sm font-semibold text-[var(--text)] truncate min-w-0">
                                 {selected.title}
@@ -407,10 +411,8 @@ const Contribution = () => {
                             </button>
                         </div>
 
-                        {/* Body */}
                         <div className="p-6 space-y-5 overflow-y-auto">
 
-                            {/* Status + Published pills */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${statusStyles[selected.status]}`}>
                                     {statusLabels[selected.status]}
@@ -426,7 +428,6 @@ const Contribution = () => {
                                 </span>
                             </div>
 
-                            {/* File card */}
                             {selected.File && (
                                 <div className="flex items-center justify-between gap-3 border border-[var(--border)] rounded-xl px-4 py-3">
                                     <div className="flex items-center gap-3 min-w-0">
@@ -453,13 +454,11 @@ const Contribution = () => {
                                 </div>
                             )}
 
-                            {/* Submitted date */}
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-[var(--text-muted)]">Submitted on</span>
                                 <span className="font-medium text-[var(--text)]">{formatDate(selected.uploaded_at)}</span>
                             </div>
 
-                            {/* Approval - separate from publish; a submission can be approved and still not published */}
                             <div className="border-t border-[var(--border)] pt-4">
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-2.5">
                                     Approval
@@ -489,7 +488,6 @@ const Contribution = () => {
                                 )}
                             </div>
 
-                            {/* Publish - independent state; approved submissions may still be waiting to go live */}
                             <div className="border-t border-[var(--border)] pt-4">
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-2.5">
                                     Publish
@@ -532,7 +530,6 @@ const Contribution = () => {
                 </div>
             )}
 
-            {/* Shared file preview modal - same one used across AllFiles / Newsletter_Hub / Newsletter */}
             <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
         </div>
     );

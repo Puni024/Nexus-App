@@ -41,14 +41,6 @@ function formatLastVisited(lastVisited: string | null | undefined): string {
     });
 }
 
-// ---------- URL <-> state helpers ----------
-const isSignedFilter = (v: string | null): v is Exclude<SignedFilter, null> =>
-    v === "google" || v === "email";
-
-const isVerifiedFilter = (v: string | null): v is Exclude<VerifiedFilter, null> =>
-    v === "verified" || v === "unverified";
-
-const isSortOrder = (v: string | null): v is SortOrder => v === "asc" || v === "desc";
 
 const Users = () => {
     const [users, setUsers] = useState<UserRow[]>([]);
@@ -57,18 +49,14 @@ const Users = () => {
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // ---------- Derive filter state from URL on every render ----------
-    const onlyActive = searchParams.get("active") === "1";
-    const signedFilter: SignedFilter = isSignedFilter(searchParams.get("signed"))
-        ? (searchParams.get("signed") as SignedFilter)
-        : null;
-    const verifiedFilter: VerifiedFilter = isVerifiedFilter(searchParams.get("verified"))
-        ? (searchParams.get("verified") as VerifiedFilter)
-        : null;
+    // ---------- State from URL params ----------
     const search = searchParams.get("search") ?? "";
-    const sortOrder: SortOrder = isSortOrder(searchParams.get("sort"))
-        ? (searchParams.get("sort") as SortOrder)
-        : "desc";
+    const activeParam = searchParams.get("active");
+    
+    const [onlyActive, setOnlyActive] = useState( activeParam === null || activeParam === "true" );
+    const [signedFilter, setSignedFilter] = useState<SignedFilter>(null);
+    const [verifiedFilter, setVerifiedFilter] = useState<VerifiedFilter>(null);
+    const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
     // Local mirror of the search box so typing feels instant; URL updates are debounced.
     const [searchInput, setSearchInput] = useState(search);
@@ -93,49 +81,49 @@ const Users = () => {
                 return next;
             }, { replace: true });
         }, 300);
+        
 
         return () => clearTimeout(handle);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchInput]);
 
-    // ---------- Generic setter that patches a single param in the URL ----------
-    const setParam = useCallback(
-        (key: string, value: string | null) => {
-            setSearchParams((prev) => {
-                const next = new URLSearchParams(prev);
-                if (value === null || value === "") {
-                    next.delete(key);
+    const toggleOnlyActive = useCallback(() => {
+        setOnlyActive((prev) => {
+            const newValue = !prev;
+            setSearchParams((prevParams) => {
+                const next = new URLSearchParams(prevParams);
+                if (newValue) {
+                    next.set("active", "true");
                 } else {
-                    next.set(key, value);
+                    next.delete("active");
                 }
                 return next;
             }, { replace: true });
-        },
-        [setSearchParams]
-    );
+            return newValue;
+        });
+    }, [setSearchParams]);
 
-    const toggleOnlyActive = useCallback(() => {
-        setParam("active", onlyActive ? null : "1");
-    }, [onlyActive, setParam]);
+    const setSignedFilterParam = useCallback((v: SignedFilter) => {
+        setSignedFilter(v);
+    }, []);
 
-    const setSignedFilterParam = useCallback(
-        (v: SignedFilter) => setParam("signed", v),
-        [setParam]
-    );
-
-    const setVerifiedFilterParam = useCallback(
-        (v: VerifiedFilter) => setParam("verified", v),
-        [setParam]
-    );
+    const setVerifiedFilterParam = useCallback((v: VerifiedFilter) => {
+        setVerifiedFilter(v);
+    }, []);
 
     const toggleSortOrder = useCallback(() => {
-        setParam("sort", sortOrder === "asc" ? "desc" : "asc");
-    }, [sortOrder, setParam]);
+        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    }, []);
 
     const clearSearch = useCallback(() => {
         setSearchInput("");
-        setParam("search", null);
-    }, [setParam]);
+
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.delete("search");
+            return next;
+        }, { replace: true });
+    }, [setSearchParams]);
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -435,8 +423,8 @@ const Users = () => {
                                                 <td className="px-4 py-3 w-[14%]">
                                                     <span
                                                         className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.isVerified
-                                                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                                                : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                                                             }`}
                                                     >
                                                         {u.isVerified ? "Verified" : "Not Verified"}

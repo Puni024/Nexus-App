@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import FilePreviewModal, { type PreviewableFile } from "../../components/FilePreviewModal";
 import api from "../../utils/api";
 
@@ -9,20 +10,20 @@ interface NewsletterFile {
 }
 
 interface SubmitterUser {
-    id: number;
+    id: string;
     name: string;
     email: string;
     info?: { picture?: string };
 }
 
 interface ApproverUser {
-    id: number;
+    id: string;
     name: string;
     email: string;
 }
 
 interface Submission {
-    newsletter_id: number;
+    newsletter_id: string;
     title: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
     uploaded_at: string;
@@ -135,6 +136,8 @@ const TABS: { key: StatusTab; label: string }[] = [
 ];
 
 const Approvals = () => {
+    const location = useLocation();
+
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -145,6 +148,7 @@ const Approvals = () => {
     const [selected, setSelected] = useState<Submission | null>(null);
     const [actionLoading, setActionLoading] = useState<"approve" | "reject" | "publish" | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+    const processedHighlightRef = useRef<string | null>(null);
 
     const fetchSubmissions = async (status: StatusTab) => {
         try {
@@ -163,7 +167,7 @@ const Approvals = () => {
 
     useEffect(() => {
         fetchSubmissions(tab);
-    }, [tab]);
+    }, [tab, location.state]);
 
     const filteredSubmissions = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -235,10 +239,21 @@ const Approvals = () => {
         }
     };
 
+    // Auto-open the submission a notification pointed at, once loaded.
+    useEffect(() => {
+        const highlightId = (location.state as any)?.highlightId;
+        if (!highlightId || submissions.length === 0) return;
+
+        const match = submissions.find((s) => String(s.newsletter_id) === String(highlightId));
+        if (match) {
+            openDetails(match);
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state, submissions]);
+
     return (
         <div className="w-full h-full flex flex-col bg-[var(--bg)] transition-colors">
 
-            {/* Page header */}
             <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 sm:px-10 py-5 border-b border-[var(--border)] bg-[var(--bg)]">
                 <div className="min-w-0">
                     <h1 className="text-xl sm:text-2xl font-bold text-[var(--text)] truncate">Approvals</h1>
@@ -265,7 +280,6 @@ const Approvals = () => {
                 </div>
             </div>
 
-            {/* Tabs */}
             <div className="shrink-0 flex items-center gap-2 px-6 sm:px-10 pt-4">
                 {TABS.map((t) => (
                     <button
@@ -281,7 +295,6 @@ const Approvals = () => {
                 ))}
             </div>
 
-            {/* Content */}
             <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6">
                 <div className="w-full">
                     <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden transition-colors">
@@ -367,7 +380,6 @@ const Approvals = () => {
                 </div>
             </div>
 
-            {/* Details / action modal */}
             {selected && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
@@ -394,7 +406,6 @@ const Approvals = () => {
 
                         <div className="p-6 space-y-5 overflow-y-auto">
 
-                            {/* SubmittedBy */}
                             <div className="flex items-center gap-3">
                                 <Avatar name={selected.SubmittedBy?.name} profile={selected.SubmittedBy?.info?.picture} size={44} />
                                 <div className="min-w-0">
@@ -407,7 +418,6 @@ const Approvals = () => {
                                 </div>
                             </div>
 
-                            {/* Status + Published pills */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${statusStyles[selected.status]}`}>
                                     {statusLabels[selected.status]}
@@ -422,7 +432,6 @@ const Approvals = () => {
                                 </span>
                             </div>
 
-                            {/* File card */}
                             {selected.File && (
                                 <div className="flex items-center justify-between gap-3 border border-[var(--border)] rounded-xl px-4 py-3">
                                     <div className="flex items-center gap-3 min-w-0">
@@ -452,13 +461,11 @@ const Approvals = () => {
                                 </div>
                             )}
 
-                            {/* Submitted date */}
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-[var(--text-muted)]">Submitted on</span>
                                 <span className="font-medium text-[var(--text)]">{formatDate(selected.uploaded_at)}</span>
                             </div>
 
-                            {/* Reviewer, if any */}
                             {selected.approver && (
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-[var(--text-muted)]">Reviewed by</span>
@@ -470,7 +477,6 @@ const Approvals = () => {
                                 <p className="text-red-600 dark:text-red-400 text-xs">{actionError}</p>
                             )}
 
-                            {/* Actions */}
                             <div className="border-t border-[var(--border)] pt-4 space-y-2.5">
                                 {selected.status === "PENDING" && (
                                     <div className="flex gap-2">

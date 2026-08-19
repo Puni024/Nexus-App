@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import api, { setLogoutHandler } from "../utils/api";
+import { useLiveNotifications } from "../hooks/useLiveNotifications";
 
 import type { AuthContextType, User, Theme, Toast, ToastType } from "../Types/Filtes";
 
@@ -17,30 +18,21 @@ let toastIdCounter = 0;
 
 const VALID_THEMES: Theme[] = ["light", "dark"];
 
-// backend may send theme as undefined/null/garbage - always fall back to "light"
 function normalizeTheme(value: unknown): Theme {
   return VALID_THEMES.includes(value as Theme) ? (value as Theme) : "light";
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // ---------------- AUTH ----------------
-
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isAuthenticated = !!user;
 
-  // ---------------- THEME (read from user.info, applied on load/reload) ----------------
-
   const theme: Theme = user?.info.Theme ?? "light";
-
-  
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
-
-  // ---------------- TOAST ----------------
 
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -52,8 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3500);
   }, []);
-
-  // ---------------- VERIFY (runs on mount / reload) ----------------
 
   const verify = useCallback(async () => {
     try {
@@ -72,10 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
     } catch {
       setUser(null);
-      if(window.location.pathname !== "/") {
+      if (window.location.pathname !== "/") {
         window.location.href = "/";
       }
-
     } finally {
       setLoading(false);
     }
@@ -85,13 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     verify();
   }, [verify]);
 
-  // ---------------- LOGIN ----------------
-
   const login = async () => {
     await verify();
   };
-
-  // ---------------- CLEAR AUTH ----------------
 
   const clearAuth = useCallback(() => {
     setUser(null);
@@ -100,8 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setLogoutHandler(clearAuth);
   }, [clearAuth]);
-
-  // ---------------- LOGOUT ----------------
 
   const logout = async () => {
     try {
@@ -113,22 +96,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // ---------------- HEARTBEAT (keeps lastActiveAt fresh while logged in) ----------------
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const ping = () => api.patch("/auth/heartbeat").catch(() => {});
-    ping(); // send immediately when user becomes authenticated
-
-    const interval = setInterval(ping, 2 * 60 * 1000); // every 2 minutes
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
-
-  // ---------------- LOCAL SYNC (no API call, other components call their own APIs then patch here) ----------------
+  // ---------------- LIVE NOTIFICATIONS + PRESENCE (replaces the old heartbeat interval) ----------------
+  // One SSE connection per session: pushes notifications instantly AND keeps
+  // last_visited fresh server-side on every keep-alive tick — no more
+  // separate setInterval(ping, 2 * 60 * 1000) needed.
+  const {
+    unreadCount,
+    notifications,
+    loadingList,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useLiveNotifications(isAuthenticated);
 
   const updateUser: AuthContextType["updateUser"] = useCallback((patch) => {
-    setUser((u:any) => {
+    setUser((u: any) => {
       if (!u) return u;
 
       const { info: infoPatch, ...rest } = patch;
@@ -158,6 +140,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateUser,
         toasts,
         showToast,
+        unreadCount,
+        notifications,
+        loadingList,
+        fetchNotifications,
+        markAsRead,
+        markAllAsRead,
       }}
     >
       {children}

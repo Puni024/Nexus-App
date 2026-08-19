@@ -367,7 +367,7 @@ function Settings() {
                 </section>
 
                 {/* DANGER ZONE - hidden for admins */}
-                {!isAdmin && (
+                {/* {!isAdmin && (
                     <section className="bg-[var(--card)] border border-red-200 dark:border-red-900/40 rounded-lg p-5 transition-colors">
                         <div className="flex items-center gap-2 mb-2">
                             <h2 className="font-semibold text-sm text-red-700 dark:text-red-400">Danger Zone</h2>
@@ -416,7 +416,7 @@ function Settings() {
                             </div>
                         )}
                     </section>
-                )}
+                )} */}
 
             </div>
         </div>
