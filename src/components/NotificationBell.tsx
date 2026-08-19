@@ -111,7 +111,7 @@ export function NotificationBell() {
                         )}
                     </div>
 
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="max-h-50 overflow-y-auto">
                         {loadingList ? (
                             <div className="px-4 py-8 text-center text-xs text-[var(--text-muted)]">
                                 Loading...
