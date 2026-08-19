@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import FilePreviewModal, { type PreviewableFile } from "../../components/FilePreviewModal";
 import api from "../../utils/api";
@@ -148,7 +148,6 @@ const Approvals = () => {
     const [selected, setSelected] = useState<Submission | null>(null);
     const [actionLoading, setActionLoading] = useState<"approve" | "reject" | "publish" | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
-    const processedHighlightRef = useRef<string | null>(null);
 
     const fetchSubmissions = async (status: StatusTab) => {
         try {

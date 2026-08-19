@@ -7,7 +7,7 @@ import { UserAvatar } from "../../components/UserAvatar";
 
 function Settings() {
 
-    const { user, theme, logout, updateUser, showToast } = useAuth();
+    const { user, theme, updateUser, showToast } = useAuth();
 
     // ---------------- NAME EDIT ----------------
 
@@ -132,22 +132,22 @@ function Settings() {
 
     // ---------------- DELETE ACCOUNT ----------------
 
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [deleting, setDeleting] = useState(false);
+    // const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    // const [deleting, setDeleting] = useState(false);
 
-    const handleDelete = async () => {
-        setDeleting(true);
-        try {
-            await api.delete("/auth/user/account");
-            await logout();
-        } catch {
-            showToast("Failed to delete account", "error");
-            setDeleting(false);
-        }
-    };
+    // const handleDelete = async () => {
+    //     setDeleting(true);
+    //     try {
+    //         await api.delete("/auth/user/account");
+    //         await logout();
+    //     } catch {
+    //         showToast("Failed to delete account", "error");
+    //         setDeleting(false);
+    //     }
+    // };
 
     const isLocal = user?.provider !== "google";
-    const isAdmin = user?.role === "admin";
+    // const isAdmin = user?.role === "admin";
 
     return (
         <div className="w-full min-h-full bg-[var(--bg)] px-4 sm:px-8 py-6 sm:py-8 transition-colors">

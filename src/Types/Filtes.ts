@@ -6,6 +6,14 @@ export type Section = "admin" | "home";
 
 export type Provider = "local" | "google";
 
+export interface AppRoute{
+  path: string;
+  component: string;
+  label: string;
+  icon: string;
+  roles: Role[];
+}
+
 export interface UserInfo {
   Theme: Theme;
   picture: string;
