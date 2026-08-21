@@ -52,8 +52,8 @@ const Users = () => {
     // ---------- State from URL params ----------
     const search = searchParams.get("search") ?? "";
     const activeParam = searchParams.get("active");
-    
-    const [onlyActive, setOnlyActive] = useState( activeParam === null || activeParam === "true" );
+
+    const [onlyActive, setOnlyActive] = useState(activeParam === null || activeParam === "true");
     const [signedFilter, setSignedFilter] = useState<SignedFilter>(null);
     const [verifiedFilter, setVerifiedFilter] = useState<VerifiedFilter>(null);
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
@@ -81,7 +81,7 @@ const Users = () => {
                 return next;
             }, { replace: true });
         }, 300);
-        
+
 
         return () => clearTimeout(handle);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -325,7 +325,7 @@ const Users = () => {
             <div className="bg-[#F5EFE4] dark:bg-[#2B2620] border border-[#D8CDB8] dark:border-[#3A332B] rounded-lg overflow-hidden flex flex-col max-h-[420px] transition-colors">
 
                 {/* Box header: count + refresh */}
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#D8CDB8] dark:border-[#3A332B]">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#D8CDB8] dark:border-[#3A332B] shrink-0">
                     <p className="text-xs text-[#8C8272] dark:text-[#A69C8C]">
                         {loading ? "Loading..." : `${filteredUsers.length} user(s)`}
                     </p>
@@ -352,103 +352,159 @@ const Users = () => {
                     </button>
                 </div>
 
-                {loading ? (
-                    <div className="flex-1 flex items-center justify-center py-10">
-                        <Loader />
-                    </div>
-                ) : error ? (
-                    <div className="p-6 space-y-3">
-                        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-                        <button
-                            onClick={fetchUsers}
-                            className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#2B2620] dark:bg-[#3A332B] text-[#EDE6D6] hover:bg-[#3A332B] dark:hover:bg-[#4A4137] transition-colors"
-                        >
-                            Try Again
-                        </button>
-                    </div>
-                ) : filteredUsers.length === 0 ? (
-                    <p className="p-6 text-sm text-[#8C8272] dark:text-[#A69C8C]">No users found.</p>
-                ) : (
-                    <>
-                        {/* Fixed header table */}
-                        <table className="w-full text-sm table-fixed shrink-0">
-                            <thead className="bg-[#2B2620] dark:bg-[#1B1712] text-[#EDE6D6]">
-                                <tr className="text-left text-[11px] uppercase tracking-wide">
-                                    <th className="px-4 py-3 font-medium w-[20%]">Name</th>
-                                    <th className="px-4 py-3 font-medium w-[26%]">Email</th>
-                                    <th className="px-4 py-3 font-medium w-[15%]">Signed With</th>
-                                    <th className="px-4 py-3 font-medium w-[14%]">Verified</th>
-                                    <th className="px-4 py-3 font-medium w-[25%]">
-                                        <button
-                                            onClick={toggleSortOrder}
-                                            className="flex items-center gap-1 hover:opacity-80 transition-opacity"
-                                        >
-                                            Last Visited
-                                            <svg
-                                                className="w-3 h-3 cursor-pointer"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.5"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                {sortOrder === "asc" ? (
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                                                ) : (
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                                )}
-                                            </svg>
-                                        </button>
-                                    </th>
+                {/* Table header always remains visible */}
+                <table className="w-full text-sm table-fixed shrink-0">
+                    <thead className="bg-[#2B2620] dark:bg-[#1B1712] text-[#EDE6D6]">
+                        <tr className="text-left text-[11px] uppercase tracking-wide">
+                            <th className="px-4 py-3 font-medium w-[20%]">
+                                Name
+                            </th>
+
+                            <th className="px-4 py-3 font-medium w-[26%]">
+                                Email
+                            </th>
+
+                            <th className="px-4 py-3 font-medium w-[15%]">
+                                Signed With
+                            </th>
+
+                            <th className="px-4 py-3 font-medium w-[14%]">
+                                Verified
+                            </th>
+
+                            <th className="px-4 py-3 font-medium w-[25%]">
+                                <button
+                                    onClick={toggleSortOrder}
+                                    className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                                >
+                                    Last Visited
+
+                                    <svg
+                                        className="w-3 h-3 cursor-pointer"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        {sortOrder === "asc" ? (
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M5 15l7-7 7 7"
+                                            />
+                                        ) : (
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M19 9l-7 7-7-7"
+                                            />
+                                        )}
+                                    </svg>
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                </table>
+
+                {/* Only this section changes during loading / error / no data */}
+                <div className="flex-1 min-h-0 overflow-y-auto">
+                    <table className="w-full text-sm table-fixed">
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="h-[280px] text-center"
+                                    >
+                                        <div className="flex items-center justify-center">
+                                            <Loader />
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                        </table>
+                            ) : error ? (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="h-[280px] px-6 text-center"
+                                    >
+                                        <div className="flex flex-col items-center justify-center gap-3">
+                                            <p className="text-sm text-red-600 dark:text-red-400">
+                                                {error}
+                                            </p>
 
-                        {/* Scrollable body table */}
-                        <div className="overflow-y-auto">
-                            <table className="w-full text-sm table-fixed">
-                                <tbody>
-                                    {filteredUsers.map((u) => {
-                                        const active = isUserActive(u.last_visited);
-
-                                        return (
-                                            <tr
-                                                key={u.id}
-                                                className="border-b border-[#D8CDB8] dark:border-[#3A332B] last:border-0 hover:bg-[#EDE6D6]/60 dark:hover:bg-[#211D18]/60"
+                                            <button
+                                                onClick={fetchUsers}
+                                                className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#2B2620] dark:bg-[#3A332B] text-[#EDE6D6] hover:bg-[#3A332B] dark:hover:bg-[#4A4137] transition-colors"
                                             >
-                                                <td className="px-4 py-3 w-[20%] text-[#2B2620] dark:text-[#EDE6D6]">{u.name}</td>
-                                                <td className="px-4 py-3 w-[26%] text-[#2B2620] dark:text-[#EDE6D6]">{u.email}</td>
-                                                <td className="px-4 py-3 w-[15%] text-[#2B2620] dark:text-[#EDE6D6] capitalize">
-                                                    {u.signedwith}
-                                                </td>
-                                                <td className="px-4 py-3 w-[14%]">
-                                                    <span
-                                                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.isVerified
+                                                Try Again
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredUsers.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="h-[280px] text-center text-sm text-[#8C8272] dark:text-[#A69C8C]"
+                                    >
+                                        No users found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredUsers.map((u) => {
+                                    const active = isUserActive(u.last_visited);
+
+                                    return (
+                                        <tr
+                                            key={u.id}
+                                            className="border-b border-[#D8CDB8] dark:border-[#3A332B] last:border-0 hover:bg-[#EDE6D6]/60 dark:hover:bg-[#211D18]/60"
+                                        >
+                                            <td className="px-4 py-3 w-[20%] text-[#2B2620] dark:text-[#EDE6D6]">
+                                                {u.name}
+                                            </td>
+
+                                            <td className="px-4 py-3 w-[26%] text-[#2B2620] dark:text-[#EDE6D6]">
+                                                {u.email}
+                                            </td>
+
+                                            <td className="px-4 py-3 w-[15%] text-[#2B2620] dark:text-[#EDE6D6] capitalize">
+                                                {u.signedwith}
+                                            </td>
+
+                                            <td className="px-4 py-3 w-[14%]">
+                                                <span
+                                                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.isVerified
                                                             ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                                                             : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                                        }`}
+                                                >
+                                                    {u.isVerified
+                                                        ? "Verified"
+                                                        : "Not Verified"}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-4 py-3 w-[25%]">
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <span
+                                                        className={`inline-block w-2 h-2 rounded-full shrink-0 ${active
+                                                                ? "bg-green-500"
+                                                                : "bg-[#8C8272] dark:bg-[#A69C8C]"
                                                             }`}
-                                                    >
-                                                        {u.isVerified ? "Verified" : "Not Verified"}
+                                                    />
+
+                                                    <span className="text-[#2B2620] dark:text-[#EDE6D6]">
+                                                        {formatLastVisited(u.last_visited)}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-3 w-[25%]">
-                                                    <span className="inline-flex items-center gap-1.5">
-                                                        <span
-                                                            className={`inline-block w-2 h-2 rounded-full shrink-0 ${active ? "bg-green-500" : "bg-[#8C8272] dark:bg-[#A69C8C]"
-                                                                }`}
-                                                        />
-                                                        <span className="text-[#2B2620] dark:text-[#EDE6D6]">
-                                                            {formatLastVisited(u.last_visited)}
-                                                        </span>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </>
-                )}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
