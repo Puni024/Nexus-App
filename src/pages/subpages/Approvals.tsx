@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import FilePreviewModal, { type PreviewableFile } from "../../components/FilePreviewModal";
 import api from "../../utils/api";
 
@@ -137,6 +137,7 @@ const TABS: { key: StatusTab; label: string }[] = [
 
 const Approvals = () => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
@@ -148,6 +149,7 @@ const Approvals = () => {
     const [selected, setSelected] = useState<Submission | null>(null);
     const [actionLoading, setActionLoading] = useState<"approve" | "reject" | "publish" | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+    const handledLocationKeyRef = useRef<string | null>(null);
 
     const fetchSubmissions = async (status: StatusTab) => {
         try {
@@ -241,14 +243,24 @@ const Approvals = () => {
     // Auto-open the submission a notification pointed at, once loaded.
     useEffect(() => {
         const highlightId = (location.state as any)?.highlightId;
-        if (!highlightId || submissions.length === 0) return;
+        if (!highlightId) return;
+        if (handledLocationKeyRef.current === location.key) return; // already handled this exact navigation
+
+        if (tab !== "ALL") {
+            setTab("ALL");
+            return;
+        }
+        if (submissions.length === 0) return;
 
         const match = submissions.find((s) => String(s.newsletter_id) === String(highlightId));
         if (match) {
+            handledLocationKeyRef.current = location.key;
             openDetails(match);
-            window.history.replaceState({}, document.title);
+            // Clear React Router's own location.state, not just the raw
+            // history entry — this is what actually stops it from re-firing.
+            navigate(location.pathname, { replace: true, state: {} });
         }
-    }, [location.state, submissions]);
+    }, [location.state, location.key, submissions, tab, location.pathname, navigate]);
 
     return (
         <div className="w-full h-full flex flex-col bg-[var(--bg)] transition-colors">
