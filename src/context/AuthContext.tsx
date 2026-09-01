@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 
@@ -21,6 +22,7 @@ const VALID_THEMES: Theme[] = ["light", "dark"];
 function normalizeTheme(value: unknown): Theme {
   return VALID_THEMES.includes(value as Theme) ? (value as Theme) : "light";
 }
+const TOKEN_REFRESH_INTERVAL_MS = 12 * 60 * 1000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -96,10 +98,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // ---------------- LIVE NOTIFICATIONS + PRESENCE (replaces the old heartbeat interval) ----------------
-  // One SSE connection per session: pushes notifications instantly AND keeps
-  // last_visited fresh server-side on every keep-alive tick — no more
-  // separate setInterval(ping, 2 * 60 * 1000) needed.
+
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+      return;
+    }
+
+    refreshTimerRef.current = setInterval(() => {
+      api.post("/auth/refresh").catch(() => {
+        // Swallowed on purpose — if the refresh token itself is dead, the
+        // next real API call will 401 and the interceptor's logoutHandler
+        // will fire. No need to duplicate that logic here.
+      });
+    }, TOKEN_REFRESH_INTERVAL_MS);
+
+    return () => {
+      if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    };
+  }, [isAuthenticated]);
+
   const {
     unreadCount,
     notifications,
