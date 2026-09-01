@@ -82,7 +82,7 @@ function Login() {
 
         } catch (error: any) {
             setLoginError(
-                error.response?.data?.message || "Login failed. Please try again."
+                "Login failed. Please try again."
             );
         }
     };
@@ -142,7 +142,7 @@ function Login() {
 
         } catch (error: any) {
             setRegisterError(
-                error.response?.data?.message || "Registration failed.2.0"
+                error.response?.data?.message=="User already exists" ?"User already exists" : "Registration failed Try again."
             );
         }
 
